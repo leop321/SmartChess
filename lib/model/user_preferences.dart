@@ -42,6 +42,13 @@ class UserPreferences {
   String userName = 'Player';
   String userAvatar = 'king_white';
 
+  // ── Rating Change & Adjustment Cooldown Tracking ──
+  int lastGameRatingChange = 0;
+  String lastGameDate = '';
+  int todayRatingChange = 0;
+  int ratingAdjustmentsCount = 0;
+  int lastAdjustmentTimestamp = 0;
+
   List<String> get pieceThemes => sortedPieceThemes;
 
   AppTheme get theme {
@@ -82,6 +89,13 @@ class UserPreferences {
         (_prefs!.getStringList('beatenBots') ?? []).map(int.parse).toList();
     userName = _prefs!.getString('userName') ?? 'Player';
     userAvatar = _prefs!.getString('userAvatar') ?? 'king_white';
+
+    lastGameRatingChange = _prefs!.getInt('lastGameRatingChange') ?? 0;
+    lastGameDate = _prefs!.getString('lastGameDate') ?? '';
+    todayRatingChange = _prefs!.getInt('todayRatingChange') ?? 0;
+    ratingAdjustmentsCount = _prefs!.getInt('ratingAdjustmentsCount') ?? 0;
+    lastAdjustmentTimestamp = _prefs!.getInt('lastAdjustmentTimestamp') ?? 0;
+
     onChanged?.call();
   }
 
@@ -170,9 +184,50 @@ class UserPreferences {
   }
 
   Future<void> setUserRating(int rating) async {
+    final oldRating = userRating;
     userRating = rating;
+
+    final change = rating - oldRating;
+    if (change != 0) {
+      final now = DateTime.now();
+      final todayStr =
+          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+      lastGameRatingChange = change;
+      if (lastGameDate == todayStr) {
+        todayRatingChange += change;
+      } else {
+        todayRatingChange = change;
+        lastGameDate = todayStr;
+      }
+
+      _prefs ??= await SharedPreferences.getInstance();
+      await _prefs!.setInt('lastGameRatingChange', lastGameRatingChange);
+      await _prefs!.setString('lastGameDate', lastGameDate);
+      await _prefs!.setInt('todayRatingChange', todayRatingChange);
+    }
+
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.setInt('userRating', rating);
+    onChanged?.call();
+  }
+
+  Future<void> adjustUserRating(int rating) async {
+    userRating = rating;
+    ratingAdjustmentsCount++;
+    lastAdjustmentTimestamp = DateTime.now().millisecondsSinceEpoch;
+
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt('userRating', rating);
+    await _prefs!.setInt('ratingAdjustmentsCount', ratingAdjustmentsCount);
+    await _prefs!.setInt('lastAdjustmentTimestamp', lastAdjustmentTimestamp);
+    onChanged?.call();
+  }
+
+  Future<void> resetRatingAdjustmentsCount() async {
+    ratingAdjustmentsCount = 0;
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt('ratingAdjustmentsCount', 0);
     onChanged?.call();
   }
 
@@ -189,9 +244,20 @@ class UserPreferences {
   Future<void> resetStats() async {
     userRating = 1200;
     beatenBots = [];
+    lastGameRatingChange = 0;
+    lastGameDate = '';
+    todayRatingChange = 0;
+    ratingAdjustmentsCount = 0;
+    lastAdjustmentTimestamp = 0;
+
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.setInt('userRating', userRating);
     await _prefs!.setStringList('beatenBots', []);
+    await _prefs!.setInt('lastGameRatingChange', 0);
+    await _prefs!.setString('lastGameDate', '');
+    await _prefs!.setInt('todayRatingChange', 0);
+    await _prefs!.setInt('ratingAdjustmentsCount', 0);
+    await _prefs!.setInt('lastAdjustmentTimestamp', 0);
     onChanged?.call();
   }
 

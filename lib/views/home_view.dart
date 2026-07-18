@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -204,6 +203,13 @@ class _RatingWidget extends StatelessWidget {
     final (nextMilestone, prevMilestone) = _milestones(rating);
     final progress = (rating - prevMilestone) / (nextMilestone - prevMilestone);
 
+    final now = DateTime.now();
+    final todayStr =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final isToday = appModel.lastGameDate == todayStr;
+    final change =
+        isToday ? appModel.todayRatingChange : appModel.lastGameRatingChange;
+
     return GlassPanel(
       borderRadius: 20,
       padding: const EdgeInsets.all(20),
@@ -227,15 +233,22 @@ class _RatingWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            '$rating',
-            style: const TextStyle(
-              fontSize: 42,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFFE5E2E1),
-              letterSpacing: -1,
-              height: 1,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                '$rating',
+                style: const TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFFE5E2E1),
+                  letterSpacing: -1,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(width: 10),
+              if (change != 0) _buildChangeIndicator(change, isToday),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
@@ -301,6 +314,37 @@ class _RatingWidget extends StatelessWidget {
       }
     }
     return (3200, 1800);
+  }
+
+  Widget _buildChangeIndicator(int change, bool isToday) {
+    final isPositive = change > 0;
+    final color =
+        isPositive ? const Color(0xFF4CAF50) : const Color(0xFFFF5252);
+    final sign = isPositive ? '+' : '';
+    final label = isToday ? 'today' : 'last game';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Text(
+        '$sign$change ($label)',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: color,
+          shadows: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.4),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

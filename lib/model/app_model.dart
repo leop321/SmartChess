@@ -61,6 +61,43 @@ class AppModel extends ChangeNotifier {
   String get userName => prefs.userName;
   String get userAvatar => prefs.userAvatar;
 
+  int get lastGameRatingChange => prefs.lastGameRatingChange;
+  String get lastGameDate => prefs.lastGameDate;
+  int get todayRatingChange => prefs.todayRatingChange;
+  int get lastAdjustmentTimestamp => prefs.lastAdjustmentTimestamp;
+
+  int get ratingAdjustmentsCount {
+    final count = prefs.ratingAdjustmentsCount;
+    if (count >= 2) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final timePassed = now - prefs.lastAdjustmentTimestamp;
+      const sixtyDaysMs = 60 * 24 * 60 * 60 * 1000;
+      if (timePassed >= sixtyDaysMs) {
+        // Cooldown expired! Reset count.
+        prefs.resetRatingAdjustmentsCount();
+        return 0;
+      }
+    }
+    return count;
+  }
+
+  bool get isRatingAdjustmentLocked => ratingAdjustmentsCount >= 2;
+
+  int get ratingAdjustmentCooldownDaysLeft {
+    if (ratingAdjustmentsCount < 2) return 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final timePassed = now - prefs.lastAdjustmentTimestamp;
+    const sixtyDaysMs = 60 * 24 * 60 * 60 * 1000;
+    final remainingMs = sixtyDaysMs - timePassed;
+    if (remainingMs <= 0) return 0;
+    return (remainingMs / (24 * 60 * 60 * 1000)).ceil();
+  }
+
+  Future<void> adjustUserRating(int rating) async {
+    await prefs.adjustUserRating(rating);
+    notifyListeners();
+  }
+
   Future<void> setUserName(String name) async {
     await prefs.setUserName(name);
     notifyListeners();
