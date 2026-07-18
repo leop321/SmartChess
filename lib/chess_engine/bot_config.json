@@ -1,0 +1,56 @@
+{
+  "bot_400_solid": {
+    "engine_binary": "stockfish",
+    "go_command": "go movetime 500 depth 1",
+    "uci_options": {
+      "Skill Level": "0",
+      "Contempt": "10"
+    },
+    "opening_book_path": "opening_book/opening_book.json"
+  },
+  "bot_800_solid": {
+    "engine_binary": "stockfish",
+    "go_command": "go movetime 800 depth 3",
+    "uci_options": {
+      "Skill Level": "5",
+      "Contempt": "10"
+    },
+    "opening_book_path": "opening_book/opening_book.json"
+  },
+  "bot_400_aggressive": {
+    "engine_binary": "stockfish",
+    "go_command": "go movetime 500 depth 1",
+    "uci_options": {
+      "Skill Level": "0",
+      "Contempt": "50"
+    },
+    "opening_book_path": "opening_book/opening_book.json"
+  },
+  "bot_800_aggressive": {
+    "engine_binary": "stockfish",
+    "go_command": "go movetime 800 depth 3",
+    "uci_options": {
+      "Skill Level": "5",
+      "Contempt": "50"
+    },
+    "opening_book_path": "opening_book/opening_book.json"
+  },
+  "bot_400_chaotic": {
+    "engine_binary": "stockfish",
+    "go_command": "go movetime 500 depth 1",
+    "uci_options": {
+      "Skill Level": "0",
+      "Contempt": "-50"
+    },
+    "opening_book_path": "opening_book/opening_book.json"
+  },
+  "bot_800_chaotic": {
+    "engine_binary": "stockfish",
+    "go_command": "go movetime 800 depth 3",
+    "uci_options": {
+      "Skill Level": "5",
+      "Contempt": "-50"
+    },
+    "opening_book_path": "opening_book/opening_book.json"
+  }
+}

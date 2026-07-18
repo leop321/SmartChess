@@ -1,8 +1,12 @@
 import 'dart:math' as math;
 import 'package:async/async.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/app_model.dart';
 import '../model/player.dart';
+import '../model/api_models.dart';
+import '../chess_engine/chess_logic/chess_state.dart';
 
 import 'checkmate_isolate.dart';
 import 'checkmate_worker.dart';
@@ -13,12 +17,18 @@ import 'move_calculation/move_classes/move_meta.dart';
 import 'play_games_service.dart';
 import 'shared_functions.dart';
 import 'stockfish_service.dart';
+import 'remote_ai_service.dart';
+import 'bot_settings_notifier.dart';
+
+final _container = ProviderContainer();
 
 /// Handles game logic orchestration: move execution, AI, undo/redo, promotion.
 /// Separated from ChessGame (the view/rendering layer) for clean MVVM.
 class GameController {
   final AppModel appModel;
   final ChessBoard board = ChessBoard();
+
+  RemoteAiService get _aiService => _container.read(remoteAiServiceProvider);
 
   CancelableOperation? aiOperation;
   List<int> validMoves = [];
@@ -129,65 +139,57 @@ class GameController {
     if (appModel.gameOver) return;
 
     final int difficulty = appModel.aiDifficulty;
-    bool playRandomMove = false;
-    if (difficulty == 1) {
-      playRandomMove = math.Random().nextDouble() < 0.60;
-    } else if (difficulty == 2) {
-      playRandomMove = math.Random().nextDouble() < 0.25;
+    
+    // FEN generieren
+    final chess = ChessState();
+    for (var mso in board.moveStack) {
+      chess.makeMove(StockfishService.msoToUCI(mso));
     }
+    final fen = chess.fen;
 
-    if (playRandomMove) {
-      final List<Move> allLegalMoves = [];
-      final activePieces = appModel.turn == Player.player1
-          ? board.player1Pieces
-          : board.player2Pieces;
-      for (var piece in activePieces) {
-        final destinations = board.movesForPiece(piece);
-        for (var dest in destinations) {
-          allLegalMoves.add(Move(piece.tile, dest));
-        }
+    // Bot ID generieren
+    final botSettings = _container.read(botSettingsNotifierProvider).value ?? BotSettings();
+    final request = MoveRequest(
+      fen: fen, 
+      elo: botSettings.elo, 
+      character: botSettings.character,
+    );
+
+    aiOperation = CancelableOperation.fromFuture(
+      _aiService.getBotMove(request),
+    );
+    
+    aiOperation?.value.then((response) {
+      if (appModel.gameOver || !appModel.isAIsTurn || appModel.historyViewIndex != null) return;
+      if (response == null) return;
+      
+      final move = _uciToMove((response as MoveResponse).move);
+      
+      validMoves = [];
+      var meta = board.push(move, getMeta: true);
+      appModel.audio.playMovedSound();
+      _moveCompletion(meta, changeTurn: !meta.promotion);
+      if (meta.promotion) {
+        appModel.moveMetaList.last.promotionType = move.promotionType;
+        _moveCompletion(appModel.moveMetaList.last, updateMetaList: false);
       }
+    }).catchError((e) {
+      debugPrint('[AI] Remote API failed ($e). Falling back to local Stockfish.');
+      // Backend not reachable — fall back to local Stockfish seamlessly.
+      _aiMoveFallback(difficulty);
+    });
+  }
 
-      if (allLegalMoves.isNotEmpty) {
-        final randomMove =
-            allLegalMoves[math.Random().nextInt(allLegalMoves.length)];
-        final movingPiece = board.tiles[randomMove.from];
-        if (movingPiece != null && movingPiece.type == ChessPieceType.pawn) {
-          if ((movingPiece.player == Player.player1 &&
-                  randomMove.to ~/ 8 == 7) ||
-              (movingPiece.player == Player.player2 &&
-                  randomMove.to ~/ 8 == 0)) {
-            randomMove.promotionType = ChessPieceType.queen;
-          }
-        }
-
-        final int moveTime = difficulty == 1 ? 100 : 200;
-        await Future.delayed(Duration(milliseconds: moveTime));
-        if (appModel.gameOver ||
-            !appModel.isAIsTurn ||
-            appModel.historyViewIndex != null) return;
-
-        validMoves = [];
-        var meta = board.push(randomMove, getMeta: true);
-        appModel.audio.playMovedSound();
-        _moveCompletion(meta, changeTurn: !meta.promotion);
-        if (meta.promotion) {
-          appModel.moveMetaList.last.promotionType = randomMove.promotionType;
-          _moveCompletion(appModel.moveMetaList.last, updateMetaList: false);
-        }
-        return;
-      }
-    }
-
+  /// Fallback: uses the bundled Stockfish binary when the remote API is unreachable.
+  void _aiMoveFallback(int difficulty) {
+    if (appModel.gameOver || !appModel.isAIsTurn || appModel.historyViewIndex != null) return;
     final movesStr =
         board.moveStack.map((mso) => StockfishService.msoToUCI(mso)).join(' ');
     aiOperation = CancelableOperation.fromFuture(
       StockfishService.instance.getBestMove(movesStr, difficulty),
     );
     aiOperation?.value.then((move) {
-      if (move == null ||
-          (move.from == 0 && move.to == 0) ||
-          appModel.gameOver) {
+      if (move == null || (move.from == 0 && move.to == 0) || appModel.gameOver) {
         appModel.endGame();
       } else {
         validMoves = [];
@@ -200,6 +202,30 @@ class GameController {
         }
       }
     });
+  }
+
+  Move _uciToMove(String uci) {
+    if (uci == 'e1g1') return Move(60, 63);
+    if (uci == 'e1c1') return Move(60, 56);
+    if (uci == 'e8g8') return Move(4, 7);
+    if (uci == 'e8c8') return Move(4, 0);
+
+    int fromFile = uci.codeUnitAt(0) - 97;
+    int fromRank = 8 - int.parse(uci[1]);
+    int toFile = uci.codeUnitAt(2) - 97;
+    int toRank = 8 - int.parse(uci[3]);
+
+    Move move = Move(fromRank * 8 + fromFile, toRank * 8 + toFile);
+
+    if (uci.length > 4) {
+      switch (uci[4]) {
+        case 'q': move.promotionType = ChessPieceType.queen; break;
+        case 'r': move.promotionType = ChessPieceType.rook; break;
+        case 'b': move.promotionType = ChessPieceType.bishop; break;
+        case 'n': move.promotionType = ChessPieceType.knight; break;
+      }
+    }
+    return move;
   }
 
   void cancelAIMove() {

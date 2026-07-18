@@ -29,13 +29,17 @@ dependencies:
   shared_preferences:
   async:
   confetti: ^0.8.0
-  google_mobile_ads: ^9.0.0
-  games_services: ^5.1.0
-  in_app_update: ^5.0.0
+  google_mobile_ads: any
+  games_services: any
+  in_app_update: any
 
   cupertino_icons: ^1.0.0
-  fluttertoast: ^9.1.0
+  fluttertoast: ^8.2.14
   stockfish: ^1.8.1
+  chess: ^0.8.1
+  just_audio: ^0.10.6
+  http: ^1.6.0
+  flutter_riverpod: ^3.3.2
 
 dev_dependencies:
   flutter_test:
@@ -107,3 +111,4 @@ flutter:
     - assets/audio/win.wav
     - assets/audio/lose.wav
     - assets/audio/tie.wav
+    - assets/audio/

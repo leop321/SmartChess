@@ -1,0 +1,6 @@
+# Place your pre-recorded English chess move audio files (.mp3) in this folder.
+# Required files:
+# Pieces: king.mp3, queen.mp3, rook.mp3, bishop.mp3, knight.mp3, pawn.mp3
+# Letters: a.mp3, b.mp3, c.mp3, d.mp3, e.mp3, f.mp3, g.mp3, h.mp3
+# Numbers: 1.mp3, 2.mp3, 3.mp3, 4.mp3, 5.mp3, 6.mp3, 7.mp3, 8.mp3
+# Special Actions: takes.mp3, castle.mp3, long_castle.mp3

@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: chess-backend-api
+    runtime: docker
+    plan: free
+    rootDir: lib/chess_engine
+    envVars:
+      - key: PORT
+        value: 8000
