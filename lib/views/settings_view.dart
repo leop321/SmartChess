@@ -11,7 +11,8 @@ import 'components/shared/bottom_padding.dart';
 import 'components/shared/glass_panel.dart';
 
 class SettingsView extends StatefulWidget {
-  const SettingsView({Key? key}) : super(key: key);
+  final bool isTab;
+  const SettingsView({Key? key, this.isTab = false}) : super(key: key);
 
   @override
   State<SettingsView> createState() => _SettingsViewState();
@@ -209,21 +210,24 @@ class _SettingsViewState extends State<SettingsView> {
                     child: Column(
                       children: [
                         // Glassy App Bar
-                        Container(
+                        Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                onPressed: () => Navigator.pop(context),
-                                child: Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  color: theme.lightTile,
-                                  size: 22,
-                                ),
-                              ),
+                              if (!widget.isTab)
+                                CupertinoButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    color: theme.lightTile,
+                                    size: 22,
+                                  ),
+                                )
+                              else
+                                const SizedBox(width: 44),
                               GestureDetector(
                                 onTap: () {
                                   if (_scrollController.hasClients) {

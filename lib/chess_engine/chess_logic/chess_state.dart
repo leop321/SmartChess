@@ -52,7 +52,8 @@ class ChessState {
         if (RegExp(r'^[a-h][1-8][a-h][1-8][qrbn]?$').hasMatch(moveInput)) {
           final from = moveInput.substring(0, 2);
           final to = moveInput.substring(2, 4);
-          final promotion = moveInput.length > 4 ? moveInput.substring(4, 5) : null;
+          final promotion =
+              moveInput.length > 4 ? moveInput.substring(4, 5) : null;
 
           final moveMap = {
             'from': from,

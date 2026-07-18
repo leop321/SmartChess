@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -245,6 +246,91 @@ class _ChessViewState extends State<ChessView> with WidgetsBindingObserver {
                   colors: _getConfettiColors(theme),
                 ),
               ),
+
+              // ── Cloud Server Warmup Overlay ──
+              if (appModel.playerCount == 1 &&
+                  !appModel.isServerAwake &&
+                  appModel.isServerWarmingUp)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {}, // swallow taps so they don't reach the board
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: GlassPanel(
+                              borderRadius: 24,
+                              color: theme.darkTile.withValues(alpha: 0.4),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    const CupertinoActivityIndicator(
+                                      radius: 18,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    const Text(
+                                      'Verbindung zum Cloud-Server wird aufgebaut...',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Bitte warten Sie noch ${appModel.serverWarmUpSecondsLeft} Sekunden.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.7),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w400,
+                                        letterSpacing: 0.2,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 28),
+                                    CupertinoButton(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 28, vertical: 12),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(16),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: const Text(
+                                        'Back',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         );

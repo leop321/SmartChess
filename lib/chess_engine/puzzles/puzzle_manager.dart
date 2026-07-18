@@ -6,7 +6,7 @@ import 'puzzle.dart';
 class PuzzleManager {
   final ChessSpeechService _speechService;
   late ChessState chessState;
-  
+
   ChessPuzzle? _currentPuzzle;
   int _currentMoveIndex = 0;
   bool _isCompleted = false;
@@ -67,7 +67,7 @@ class PuzzleManager {
 
     // Play opponent's response automatically
     final opponentExpectedMove = puzzle.solutionMoves[_currentMoveIndex];
-    
+
     // We add a small delay before opponent replies so it sounds natural
     await Future.delayed(const Duration(milliseconds: 800));
 

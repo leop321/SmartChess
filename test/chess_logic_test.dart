@@ -28,7 +28,8 @@ void main() {
     });
 
     test('Parse capture with piece', () {
-      expect(MoveParser.parseSan('Nxd4'), equals(['knight', 'takes', 'd', '4']));
+      expect(
+          MoveParser.parseSan('Nxd4'), equals(['knight', 'takes', 'd', '4']));
     });
 
     test('Parse pawn capture', () {
@@ -44,13 +45,16 @@ void main() {
     });
 
     test('Parse check and checkmate symbols are removed', () {
-      expect(MoveParser.parseSan('Qxf7#'), equals(['queen', 'takes', 'f', '7']));
-      expect(MoveParser.parseSan('Bxf7+'), equals(['bishop', 'takes', 'f', '7']));
+      expect(
+          MoveParser.parseSan('Qxf7#'), equals(['queen', 'takes', 'f', '7']));
+      expect(
+          MoveParser.parseSan('Bxf7+'), equals(['bishop', 'takes', 'f', '7']));
     });
 
     test('Parse pawn promotion', () {
       expect(MoveParser.parseSan('e8=Q'), equals(['e', '8', 'queen']));
-      expect(MoveParser.parseSan('exd8=N#'), equals(['e', 'takes', 'd', '8', 'knight']));
+      expect(MoveParser.parseSan('exd8=N#'),
+          equals(['e', 'takes', 'd', '8', 'knight']));
     });
 
     test('Parse disambiguated moves', () {
@@ -62,7 +66,9 @@ void main() {
   group('ChessState Tests', () {
     test('Initialize starting board FEN', () {
       final state = ChessState();
-      expect(state.fen.startsWith('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'), isTrue);
+      expect(
+          state.fen.startsWith('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'),
+          isTrue);
     });
 
     test('Make legal move and get SAN history', () {
@@ -147,7 +153,7 @@ void main() {
       // Step 1: User plays Nc7+ (d5c7)
       final step1Success = await manager.playUserMove('d5c7');
       expect(step1Success, isTrue);
-      
+
       // Wait for future delay inside playUserMove for opponent response to execute
       await Future.delayed(const Duration(milliseconds: 1000));
 
@@ -156,15 +162,18 @@ void main() {
 
       // Verify user move voice and opponent reply voice were played
       expect(mockSpeech.playedTokenSequences.length, equals(2));
-      expect(mockSpeech.playedTokenSequences[0], equals(['knight', 'c', '7'])); // Nc7+
-      expect(mockSpeech.playedTokenSequences[1], equals(['king', 'd', '7'])); // Kd7 (Opponent reply)
+      expect(mockSpeech.playedTokenSequences[0],
+          equals(['knight', 'c', '7'])); // Nc7+
+      expect(mockSpeech.playedTokenSequences[1],
+          equals(['king', 'd', '7'])); // Kd7 (Opponent reply)
 
       // Step 2: User plays Nxa8 (c7a8)
       final step2Success = await manager.playUserMove('c7a8');
       expect(step2Success, isTrue);
       expect(manager.isCompleted, isTrue);
       expect(mockSpeech.playedTokenSequences.length, equals(3));
-      expect(mockSpeech.playedTokenSequences[2], equals(['knight', 'takes', 'a', '8'])); // Nxa8
+      expect(mockSpeech.playedTokenSequences[2],
+          equals(['knight', 'takes', 'a', '8'])); // Nxa8
     });
   });
 }

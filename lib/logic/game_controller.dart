@@ -1,13 +1,12 @@
-import 'dart:math' as math;
 import 'package:async/async.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../chess_engine/chess_logic/chess_state.dart';
+import '../model/api_models.dart';
 import '../model/app_model.dart';
 import '../model/player.dart';
-import '../model/api_models.dart';
-import '../chess_engine/chess_logic/chess_state.dart';
-
+import 'bot_settings_notifier.dart';
 import 'checkmate_isolate.dart';
 import 'checkmate_worker.dart';
 import 'chess_board.dart';
@@ -15,12 +14,11 @@ import 'chess_piece.dart';
 import 'move_calculation/move_classes/move.dart';
 import 'move_calculation/move_classes/move_meta.dart';
 import 'play_games_service.dart';
+import 'remote_ai_service.dart';
 import 'shared_functions.dart';
 import 'stockfish_service.dart';
-import 'remote_ai_service.dart';
-import 'bot_settings_notifier.dart';
 
-final _container = ProviderContainer();
+final providerContainer = ProviderContainer();
 
 /// Handles game logic orchestration: move execution, AI, undo/redo, promotion.
 /// Separated from ChessGame (the view/rendering layer) for clean MVVM.
@@ -28,7 +26,8 @@ class GameController {
   final AppModel appModel;
   final ChessBoard board = ChessBoard();
 
-  RemoteAiService get _aiService => _container.read(remoteAiServiceProvider);
+  RemoteAiService get _aiService =>
+      providerContainer.read(remoteAiServiceProvider);
 
   CancelableOperation? aiOperation;
   List<int> validMoves = [];
@@ -135,11 +134,22 @@ class GameController {
 
   void _aiMove() async {
     if (appModel.gameOver) return;
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (appModel.gameOver) return;
+
+    // Falls der Server gerade aufwärmt, warten wir mit der Zuganfrage,
+    // bis er wach ist (oder der Aufwärm-Timer abgelaufen ist).
+    if (appModel.playerCount == 1 &&
+        !appModel.isServerAwake &&
+        appModel.isServerWarmingUp) {
+      while (!appModel.isServerAwake && appModel.isServerWarmingUp) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (appModel.gameOver ||
+            !appModel.isAIsTurn ||
+            appModel.historyViewIndex != null) return;
+      }
+    }
 
     final int difficulty = appModel.aiDifficulty;
-    
+
     // FEN generieren
     final chess = ChessState();
     for (var mso in board.moveStack) {
@@ -148,23 +158,27 @@ class GameController {
     final fen = chess.fen;
 
     // Bot ID generieren
-    final botSettings = _container.read(botSettingsNotifierProvider).value ?? BotSettings();
+    final botSettings =
+        providerContainer.read(botSettingsNotifierProvider).value ??
+            BotSettings();
     final request = MoveRequest(
-      fen: fen, 
-      elo: botSettings.elo, 
+      fen: fen,
+      elo: botSettings.elo,
       character: botSettings.character,
     );
 
     aiOperation = CancelableOperation.fromFuture(
       _aiService.getBotMove(request),
     );
-    
+
     aiOperation?.value.then((response) {
-      if (appModel.gameOver || !appModel.isAIsTurn || appModel.historyViewIndex != null) return;
+      if (appModel.gameOver ||
+          !appModel.isAIsTurn ||
+          appModel.historyViewIndex != null) return;
       if (response == null) return;
-      
+
       final move = _uciToMove((response as MoveResponse).move);
-      
+
       validMoves = [];
       var meta = board.push(move, getMeta: true);
       appModel.audio.playMovedSound();
@@ -174,7 +188,8 @@ class GameController {
         _moveCompletion(appModel.moveMetaList.last, updateMetaList: false);
       }
     }).catchError((e) {
-      debugPrint('[AI] Remote API failed ($e). Falling back to local Stockfish.');
+      debugPrint(
+          '[AI] Remote API failed ($e). Falling back to local Stockfish.');
       // Backend not reachable — fall back to local Stockfish seamlessly.
       _aiMoveFallback(difficulty);
     });
@@ -182,14 +197,18 @@ class GameController {
 
   /// Fallback: uses the bundled Stockfish binary when the remote API is unreachable.
   void _aiMoveFallback(int difficulty) {
-    if (appModel.gameOver || !appModel.isAIsTurn || appModel.historyViewIndex != null) return;
+    if (appModel.gameOver ||
+        !appModel.isAIsTurn ||
+        appModel.historyViewIndex != null) return;
     final movesStr =
         board.moveStack.map((mso) => StockfishService.msoToUCI(mso)).join(' ');
     aiOperation = CancelableOperation.fromFuture(
       StockfishService.instance.getBestMove(movesStr, difficulty),
     );
     aiOperation?.value.then((move) {
-      if (move == null || (move.from == 0 && move.to == 0) || appModel.gameOver) {
+      if (move == null ||
+          (move.from == 0 && move.to == 0) ||
+          appModel.gameOver) {
         appModel.endGame();
       } else {
         validMoves = [];
@@ -219,10 +238,18 @@ class GameController {
 
     if (uci.length > 4) {
       switch (uci[4]) {
-        case 'q': move.promotionType = ChessPieceType.queen; break;
-        case 'r': move.promotionType = ChessPieceType.rook; break;
-        case 'b': move.promotionType = ChessPieceType.bishop; break;
-        case 'n': move.promotionType = ChessPieceType.knight; break;
+        case 'q':
+          move.promotionType = ChessPieceType.queen;
+          break;
+        case 'r':
+          move.promotionType = ChessPieceType.rook;
+          break;
+        case 'b':
+          move.promotionType = ChessPieceType.bishop;
+          break;
+        case 'n':
+          move.promotionType = ChessPieceType.knight;
+          break;
       }
     }
     return move;

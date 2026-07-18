@@ -10,6 +10,7 @@ import '../logic/haptic_service.dart';
 import '../logic/move_calculation/move_classes/move_meta.dart';
 import '../logic/move_calculation/move_classes/move_stack_object.dart';
 import '../logic/play_games_service.dart';
+import '../logic/remote_ai_service.dart';
 import '../logic/shared_functions.dart';
 import '../logic/stockfish_service.dart';
 import '../logic/timer_service.dart';
@@ -53,6 +54,27 @@ class AppModel extends ChangeNotifier {
   int get themeIndex => prefs.themeIndex;
   int get pieceThemeIndex => prefs.pieceThemeIndex;
   List<String> get pieceThemes => prefs.pieceThemes;
+
+  // ── Profile / Stats Accessors ──
+  int get userRating => prefs.userRating;
+  List<int> get beatenBots => prefs.beatenBots;
+  String get userName => prefs.userName;
+  String get userAvatar => prefs.userAvatar;
+
+  Future<void> setUserName(String name) async {
+    await prefs.setUserName(name);
+    notifyListeners();
+  }
+
+  Future<void> setUserAvatar(String avatar) async {
+    await prefs.setUserAvatar(avatar);
+    notifyListeners();
+  }
+
+  Future<void> resetStats() async {
+    await prefs.resetStats();
+    notifyListeners();
+  }
 
   ValueNotifier<Duration> get player1TimeLeft => timerService.player1TimeLeft;
   set player1TimeLeft(ValueNotifier<Duration> val) =>
@@ -100,6 +122,60 @@ class AppModel extends ChangeNotifier {
 
   // ── Save Debounce ──
   Timer? _saveDebounceTimer;
+
+  // ── Server Warmup State ──
+  bool isServerWarmingUp = false;
+  bool isServerAwake = false;
+  int serverWarmUpSecondsLeft = 50;
+  Timer? _warmUpTimer;
+  Timer? _pingPollTimer;
+
+  Future<void> startServerWarmup() async {
+    if (isServerAwake || isServerWarmingUp) return;
+
+    final aiService = providerContainer.read(remoteAiServiceProvider);
+
+    // Initialer schneller Check: Wenn der Server bereits wach ist,
+    // beenden wir das Aufwärmen sofort und überspringen den Countdown komplett.
+    final quickSuccess = await aiService.pingServer();
+    if (quickSuccess) {
+      isServerAwake = true;
+      isServerWarmingUp = false;
+      serverWarmUpSecondsLeft = 0;
+      notifyListeners();
+      return;
+    }
+
+    // Falls der Server schläft, starten wir den Countdown und das periodische Pollen
+    isServerWarmingUp = true;
+    serverWarmUpSecondsLeft = 50;
+    notifyListeners();
+
+    // Start countdown timer
+    _warmUpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (serverWarmUpSecondsLeft > 0) {
+        serverWarmUpSecondsLeft--;
+        notifyListeners();
+      } else {
+        timer.cancel();
+        isServerWarmingUp = false;
+        notifyListeners();
+      }
+    });
+
+    // Periodically poll /health
+    _pingPollTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      final success = await aiService.pingServer();
+      if (success) {
+        timer.cancel();
+        _warmUpTimer?.cancel();
+        isServerAwake = true;
+        isServerWarmingUp = false;
+        serverWarmUpSecondsLeft = 0;
+        notifyListeners();
+      }
+    });
+  }
 
   // ── Undo Bank ──
   /// Number of free undos remaining for the current game.
@@ -150,6 +226,9 @@ class AppModel extends ChangeNotifier {
     if (prefs == null) {
       this.prefs.load();
     }
+
+    // Start warming up the Render cloud server in the background
+    startServerWarmup();
   }
 
   // ── Game Lifecycle ──
@@ -380,6 +459,30 @@ class AppModel extends ChangeNotifier {
         aiDifficulty: aiDifficulty,
         timeLimit: timeLimit,
       );
+    }
+
+    // ── Elo rating update (AI games only) ──
+    if (playingWithAI) {
+      // Map difficulty levels to approximate ELO ratings.
+      const botElos = {1: 400, 2: 800, 3: 1200, 4: 1600, 5: 2000};
+      final botElo = botElos[aiDifficulty] ?? 1200;
+      final currentRating = prefs.userRating;
+
+      // Standard Elo expected score.
+      final expected =
+          1.0 / (1.0 + math.pow(10.0, (botElo - currentRating) / 400.0));
+
+      // Score: 1 = win, 0.5 = draw (stalemate), 0 = loss.
+      final score = userWon ? 1.0 : (stalemate ? 0.5 : 0.0);
+      final newRating =
+          (currentRating + 32 * (score - expected)).round().clamp(100, 3200);
+
+      prefs.setUserRating(newRating);
+
+      // Track beaten bots.
+      if (userWon && !stalemate) {
+        prefs.addBeatenBot(aiDifficulty);
+      }
     }
 
     GameStateStorage.clearGameState();
@@ -648,6 +751,8 @@ class AppModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _warmUpTimer?.cancel();
+    _pingPollTimer?.cancel();
     gameController?.dispose();
     StockfishService.instance.dispose();
     super.dispose();

@@ -12,12 +12,14 @@ class GameOptions extends StatelessWidget {
   final AppModel appModel;
   final bool hasSavedGame;
   final ScrollController? scrollController;
+  final bool showLogo;
 
   const GameOptions(
     this.appModel, {
     Key? key,
     required this.hasSavedGame,
     this.scrollController,
+    this.showLogo = true,
   }) : super(key: key);
 
   @override
@@ -36,40 +38,41 @@ class GameOptions extends StatelessWidget {
       padding: EdgeInsets.only(top: 10, bottom: bottomListPadding),
       physics: physics,
       children: [
-        // Header Section (Logo, Title, Subtitle)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0),
-          child: Column(
-            children: [
-              Image.asset(
-                'assets/images/logo.png',
-                width: 80,
-                height: 80,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Chess',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFE5E2E1),
-                  letterSpacing: -0.5,
+        // Header Section (Logo, Title, Subtitle) — hidden when showLogo is false
+        if (showLogo)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: Column(
+              children: [
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.contain,
                 ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'The Intellectual Arena',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                  color: Color(0xFFE5E2E1),
-                  letterSpacing: 0.5,
+                const SizedBox(height: 12),
+                const Text(
+                  'Chess',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFE5E2E1),
+                    letterSpacing: -0.5,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                const Text(
+                  'The Intellectual Arena',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
+                    color: Color(0xFFE5E2E1),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
         GlassPanel(
           child: GameModePicker(
             appModel.playerCount,

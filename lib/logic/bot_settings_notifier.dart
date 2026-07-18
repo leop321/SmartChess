@@ -84,6 +84,7 @@ class BotSettingsNotifier extends AsyncNotifier<BotSettings> {
   }
 }
 
-final botSettingsNotifierProvider = AsyncNotifierProvider<BotSettingsNotifier, BotSettings>(() {
+final botSettingsNotifierProvider =
+    AsyncNotifierProvider<BotSettingsNotifier, BotSettings>(() {
   return BotSettingsNotifier();
 });

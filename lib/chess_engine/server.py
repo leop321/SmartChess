@@ -77,6 +77,12 @@ class MoveResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+@app.get("/health")
+async def health_check():
+    """Lightweight endpoint to ping and warm up the server during cold start."""
+    return {"status": "ok"}
+
+
 @app.post("/api/v1/move", response_model=MoveResponse)
 async def get_move(request: MoveRequest):
     """

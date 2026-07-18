@@ -36,6 +36,12 @@ class UserPreferences {
   int timerIncrement = 0;
   String timerMode = 'increment';
 
+  // ── Profile / Stats ──
+  int userRating = 1200;
+  List<int> beatenBots = [];
+  String userName = 'Player';
+  String userAvatar = 'king_white';
+
   List<String> get pieceThemes => sortedPieceThemes;
 
   AppTheme get theme {
@@ -71,6 +77,11 @@ class UserPreferences {
     _prefs!.setString('aiEngine', 'stockfish');
     timerIncrement = _prefs!.getInt('timerIncrement') ?? 0;
     timerMode = _prefs!.getString('timerMode') ?? 'increment';
+    userRating = _prefs!.getInt('userRating') ?? 1200;
+    beatenBots =
+        (_prefs!.getStringList('beatenBots') ?? []).map(int.parse).toList();
+    userName = _prefs!.getString('userName') ?? 'Player';
+    userAvatar = _prefs!.getString('userAvatar') ?? 'king_white';
     onChanged?.call();
   }
 
@@ -158,6 +169,46 @@ class UserPreferences {
     onChanged?.call();
   }
 
+  Future<void> setUserRating(int rating) async {
+    userRating = rating;
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt('userRating', rating);
+    onChanged?.call();
+  }
+
+  Future<void> addBeatenBot(int difficulty) async {
+    if (!beatenBots.contains(difficulty)) {
+      beatenBots = List<int>.from(beatenBots)..add(difficulty);
+      _prefs ??= await SharedPreferences.getInstance();
+      await _prefs!.setStringList(
+          'beatenBots', beatenBots.map((e) => e.toString()).toList());
+      onChanged?.call();
+    }
+  }
+
+  Future<void> resetStats() async {
+    userRating = 1200;
+    beatenBots = [];
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt('userRating', userRating);
+    await _prefs!.setStringList('beatenBots', []);
+    onChanged?.call();
+  }
+
+  Future<void> setUserName(String name) async {
+    userName = name;
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString('userName', name);
+    onChanged?.call();
+  }
+
+  Future<void> setUserAvatar(String avatar) async {
+    userAvatar = avatar;
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString('userAvatar', avatar);
+    onChanged?.call();
+  }
+
   Future<void> resetToDefaults() async {
     themeName = 'Forest Mint';
     pieceTheme = 'Classic';
@@ -187,6 +238,8 @@ class UserPreferences {
     await _prefs!.setString('aiEngine', aiEngine);
     await _prefs!.setInt('timerIncrement', timerIncrement);
     await _prefs!.setString('timerMode', timerMode);
+    // Note: profile stats (rating, beatenBots, userName, userAvatar) are NOT
+    // reset by this method — only via resetStats().
     onChanged?.call();
   }
 }

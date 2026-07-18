@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+
 import '../model/api_models.dart';
 
 // ---------------------------------------------------------------------------
@@ -37,7 +39,7 @@ class RemoteAiService {
   final http.Client _client;
 
   RemoteAiService({
-    required this.baseUrl, 
+    required this.baseUrl,
     http.Client? client,
   }) : _client = client ?? http.Client();
 
@@ -47,14 +49,16 @@ class RemoteAiService {
     final uri = Uri.parse('$baseUrl/api/v1/move');
 
     try {
-      final response = await _client.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(request.toJson()),
-      ).timeout(const Duration(seconds: 15));
+      final response = await _client
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -64,13 +68,15 @@ class RemoteAiService {
         throw EngineErrorException('Bad Request: ${response.body}');
       } else if (response.statusCode == 422) {
         // FastAPI / Pydantic validation errors
-        throw InvalidFenException('Unprocessable Entity (Invalid FEN or Format): ${response.body}');
+        throw InvalidFenException(
+            'Unprocessable Entity (Invalid FEN or Format): ${response.body}');
       } else if (response.statusCode == 500) {
         // Internal server errors (Engine timeout, crash, etc)
         throw EngineErrorException('Internal Server Error: ${response.body}');
       } else {
         // Any other HTTP error
-        throw EngineErrorException('Unexpected HTTP Status: ${response.statusCode} - ${response.body}');
+        throw EngineErrorException(
+            'Unexpected HTTP Status: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       if (e is RemoteAiException) {
@@ -78,8 +84,22 @@ class RemoteAiService {
         rethrow;
       } else {
         // Wrap network connection / timeout errors
-        throw ApiTimeoutException('Connection to AI Backend failed or timed out: $e');
+        throw ApiTimeoutException(
+            'Connection to AI Backend failed or timed out: $e');
       }
+    }
+  }
+
+  /// Sends a lightweight GET request to the /health endpoint.
+  /// Used for warming up the server during cold starts on Render.com free tier.
+  Future<bool> pingServer() async {
+    final uri = Uri.parse('$baseUrl/health');
+    try {
+      final response =
+          await _client.get(uri).timeout(const Duration(seconds: 4));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
     }
   }
 }

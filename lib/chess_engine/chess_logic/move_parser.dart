@@ -66,7 +66,7 @@ class MoveParser {
     }
 
     // Find destination square (file and rank, e.g. "d4")
-    // In case of disambiguated moves (like Nbd2 or R1e2), the destination square 
+    // In case of disambiguated moves (like Nbd2 or R1e2), the destination square
     // is always at the end. We match the last file-rank combination in the string.
     final match = RegExp(r'([a-h])([1-8])').firstMatch(remaining);
     if (match != null) {

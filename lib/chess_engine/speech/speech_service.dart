@@ -16,7 +16,8 @@ class ChessSpeechService {
       } catch (e) {
         // In headless unit tests, AudioPlayer initialization can fail due to lack of binary messenger.
         _isInitialized = false;
-        debugPrint('ChessSpeechService warning: Failed to initialize AudioPlayer: $e');
+        debugPrint(
+            'ChessSpeechService warning: Failed to initialize AudioPlayer: $e');
       }
     }
   }
@@ -36,12 +37,13 @@ class ChessSpeechService {
       final List<AudioSource> sources = [];
       for (final token in tokens) {
         // Sanitize token to ensure it contains only letters, numbers, or underscores
-        final cleanToken = token.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '').toLowerCase();
+        final cleanToken =
+            token.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '').toLowerCase();
         if (cleanToken.isEmpty) continue;
 
         // Path to the asset sound
         final assetPath = 'assets/audio/$cleanToken.mp3';
-        
+
         // Add asset source to the list
         sources.add(AudioSource.asset(assetPath));
       }
@@ -57,8 +59,10 @@ class ChessSpeechService {
       _player!.play();
     } catch (e) {
       // Print warning (e.g. if files are not present in assets folder)
-      debugPrint('ChessSpeechService warning: Failed to play move sequence. Error: $e');
-      debugPrint('Please ensure all required audio files are present in the assets/audio/ directory.');
+      debugPrint(
+          'ChessSpeechService warning: Failed to play move sequence. Error: $e');
+      debugPrint(
+          'Please ensure all required audio files are present in the assets/audio/ directory.');
     }
   }
 

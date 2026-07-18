@@ -11,7 +11,7 @@ import 'logic/play_games_service.dart';
 import 'logic/shared_functions.dart';
 import 'model/app_model.dart';
 import 'model/user_preferences.dart';
-import 'views/main_menu_view.dart';
+import 'views/main_navigation_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -155,7 +155,7 @@ class Chess extends StatelessWidget {
           pickerTextStyle: TextStyle(fontFamily: 'Inter'),
         ),
       ),
-      home: MainMenuView(),
+      home: MainNavigationContainer(),
     );
   }
 }
