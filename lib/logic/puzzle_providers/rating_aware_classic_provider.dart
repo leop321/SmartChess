@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -132,49 +131,62 @@ class RatingAwareClassicProvider implements TacticsTaskProvider {
       }
     }
 
-    // Prefer entries not yet seen in recent sessions; fall back to the full pool.
-    var candidates =
+    // ── Root Cause 1, 2 & 3 Fix: Selection with strict rating window + randomization + persistent seen filtering ──
+    const int maxAcceptableDelta = 250;
+
+    // 1. Filter pool for puzzles not yet seen in recent sessions.
+    final unseenPool =
         _pool.where((e) => !_seenIds.contains(e.puzzle.id)).toList();
 
-    if (candidates.isEmpty && _pool.isNotEmpty) {
-      if (_seenIds.length > 10) {
-        _seenIds.removeRange(0, _seenIds.length - 10);
-      } else {
-        _seenIds.clear();
-      }
-      candidates = _pool.where((e) => !_seenIds.contains(e.puzzle.id)).toList();
-      if (candidates.isEmpty) candidates = List.from(_pool);
-    }
-
-    final source = candidates.isNotEmpty ? candidates : _pool;
-
-    // Find the minimum rating delta among available puzzles.
-    int minDelta = 0x7fffffff;
-    for (final entry in source) {
-      final delta = (entry.puzzle.rating - targetRating).abs();
-      if (delta < minDelta) {
-        minDelta = delta;
-      }
-    }
-
-    // Filter to all candidate puzzles within a reasonable rating proximity (minDelta + 300 ELO).
-    final eligible = source.where((e) {
-      final delta = (e.puzzle.rating - targetRating).abs();
-      return delta <= minDelta + 300;
+    // 2. Try to find unseen candidates within maxAcceptableDelta of targetRating.
+    List<_PoolEntry> eligible = unseenPool.where((e) {
+      return (e.puzzle.rating - targetRating).abs() <= maxAcceptableDelta;
     }).toList();
 
-    // Select randomly among all eligible candidates to ensure variety every session.
-    final best = eligible.isNotEmpty
-        ? eligible[Random().nextInt(eligible.length)]
-        : source[Random().nextInt(source.length)];
+    // 3. If no unseen puzzle matches the rating window, allow recycling seen puzzles WITHIN maxAcceptableDelta.
+    if (eligible.isEmpty) {
+      eligible = _pool.where((e) {
+        return (e.puzzle.rating - targetRating).abs() <= maxAcceptableDelta;
+      }).toList();
+    }
+
+    // 4. If pool has no puzzle within maxAcceptableDelta of target, find closest available puzzles in pool.
+    if (eligible.isEmpty && _pool.isNotEmpty) {
+      int minDelta = 0x7fffffff;
+      for (final entry in _pool) {
+        final delta = (entry.puzzle.rating - targetRating).abs();
+        if (delta < minDelta) minDelta = delta;
+      }
+      eligible = _pool.where((e) {
+        return (e.puzzle.rating - targetRating).abs() <= minDelta + 150;
+      }).toList();
+    }
+
+    final source = eligible.isNotEmpty ? eligible : _pool;
+
+    // Sort candidates by closeness to target rating.
+    source.sort((a, b) {
+      final deltaA = (a.puzzle.rating - targetRating).abs();
+      final deltaB = (b.puzzle.rating - targetRating).abs();
+      return deltaA.compareTo(deltaB);
+    });
+
+    // Pick randomly among the top 5 closest candidates to guarantee rating accuracy + variety.
+    final topCandidates = source.take(5).toList()..shuffle();
+    final best = topCandidates.first;
+
+    final actualDelta = (best.puzzle.rating - targetRating).abs();
 
     _pool.remove(best);
     _seenIds.add(best.puzzle.id);
+    if (_seenIds.length > 50) {
+      _seenIds.removeRange(0, _seenIds.length - 50);
+    }
     TacticsStorage.saveRecentPuzzleIds(_seenIds, mode: 'classic');
 
     debugPrint('[RatingAwareClassicProvider] Serving puzzle ${best.puzzle.id} '
         '(rating ${best.puzzle.rating}, target $targetRating, '
-        'minDelta $minDelta, pool size ${_pool.length})');
+        'delta $actualDelta, pool size ${_pool.length})');
 
     return _mapToTask(best.puzzle);
   }
