@@ -1,11 +1,9 @@
+import 'package:en_passant/logic/game_controller.dart';
+import 'package:en_passant/logic/simple_tactics_queue.dart';
+import 'package:en_passant/model/app_model.dart';
+import 'package:en_passant/model/tactics_task.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:en_passant/logic/simple_tactics_queue.dart';
-import 'package:en_passant/model/tactics_task.dart';
-import 'package:en_passant/logic/chess_board.dart';
-import 'package:en_passant/logic/game_controller.dart';
-import 'package:en_passant/model/app_model.dart';
-import 'package:en_passant/model/player.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -61,7 +59,6 @@ void main() {
 
       final pieceCount1 = controller.board.player1Pieces.length +
           controller.board.player2Pieces.length;
-      final turn1 = appModel.turn;
 
       // Load FEN 2
       const fen2 = '5rk1/1p3ppp/pq3b2/8/8/1P1Q1N2/P4PPP/3R2K1 w - - 2 27';
@@ -69,7 +66,6 @@ void main() {
 
       final pieceCount2 = controller.board.player1Pieces.length +
           controller.board.player2Pieces.length;
-      final turn2 = appModel.turn;
 
       expect(pieceCount1, isNot(equals(pieceCount2)));
       expect(controller.board.moveStack.isEmpty, true);

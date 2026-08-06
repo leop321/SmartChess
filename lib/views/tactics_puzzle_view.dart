@@ -6,10 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../logic/chess_game.dart';
 import '../logic/game_controller.dart';
-import '../logic/puzzle_providers/asset_anti_tactics_provider.dart';
-import '../logic/puzzle_providers/rating_aware_classic_provider.dart';
 import '../logic/puzzle_providers/tactics_task_provider.dart';
-import '../logic/puzzle_providers/unified_tactics_session_manager.dart';
 import '../logic/tactics_judge.dart';
 import '../logic/tactics_puzzle_controller.dart';
 import '../model/app_model.dart';

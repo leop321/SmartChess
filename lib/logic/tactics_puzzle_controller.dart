@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:chess/chess.dart' as ch;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../model/anti_tactics_storage.dart';
@@ -12,6 +11,7 @@ import '../model/tactics_task.dart';
 import 'chess_piece.dart';
 import 'game_controller.dart';
 import 'move_calculation/move_classes/move.dart';
+import 'puzzle_providers/rating_aware_classic_provider.dart';
 import 'puzzle_providers/tactics_task_provider.dart';
 import 'puzzle_rush_storage.dart';
 import 'simple_tactics_queue.dart';
@@ -66,14 +66,6 @@ class TacticsPuzzleController extends ChangeNotifier
       TacticsStorage.saveRating(_rating, mode: mode.name);
       TacticsStorage.saveHistory(_history, mode: mode.name);
     }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _timer?.cancel();
-    _sessionTimer?.cancel();
-    super.dispose();
   }
 
   GameController? gameController;
@@ -640,7 +632,8 @@ class TacticsPuzzleController extends ChangeNotifier
     notifyListeners();
 
     try {
-      final task = await _provider.fetchTaskById(puzzleId);
+      final provider = _provider ?? RatingAwareClassicProvider();
+      final task = await provider.fetchTaskById(puzzleId);
       _task = task;
       _board = ch.Chess.fromFEN(task.fen);
       _initialPlayerColor = _board!.turn;
@@ -683,6 +676,7 @@ class TacticsPuzzleController extends ChangeNotifier
   @override
   void dispose() {
     _isDisposed = true;
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _sessionTimer?.cancel();
     super.dispose();
