@@ -28,8 +28,8 @@ class RatingAwareClassicProvider implements TacticsTaskProvider {
   /// In-memory pool of available puzzles.
   final List<_PoolEntry> _pool = [];
 
-  /// IDs seen in this session (to avoid repeats until the pool is exhausted).
-  final Set<String> _seenIds = {};
+  /// IDs seen in recent sessions (persisted across app restarts).
+  final List<String> _seenIds = [];
 
   bool _seedLoaded = false;
   bool _fetchInProgress = false;
@@ -44,6 +44,10 @@ class RatingAwareClassicProvider implements TacticsTaskProvider {
     if (_seedLoaded) return;
     _seedLoaded = true;
     try {
+      final savedSeen =
+          await TacticsStorage.loadRecentPuzzleIds(mode: 'classic');
+      _seenIds.addAll(savedSeen);
+
       final jsonString =
           await rootBundle.loadString('assets/data/lichess_puzzles.json');
       final List<dynamic> jsonList = jsonDecode(jsonString);
@@ -128,13 +132,18 @@ class RatingAwareClassicProvider implements TacticsTaskProvider {
       }
     }
 
-    // Prefer entries not yet seen this session; fall back to the full pool.
+    // Prefer entries not yet seen in recent sessions; fall back to the full pool.
     var candidates =
         _pool.where((e) => !_seenIds.contains(e.puzzle.id)).toList();
 
     if (candidates.isEmpty && _pool.isNotEmpty) {
-      _seenIds.clear();
-      candidates = List.from(_pool);
+      if (_seenIds.length > 10) {
+        _seenIds.removeRange(0, _seenIds.length - 10);
+      } else {
+        _seenIds.clear();
+      }
+      candidates = _pool.where((e) => !_seenIds.contains(e.puzzle.id)).toList();
+      if (candidates.isEmpty) candidates = List.from(_pool);
     }
 
     final source = candidates.isNotEmpty ? candidates : _pool;
@@ -161,6 +170,7 @@ class RatingAwareClassicProvider implements TacticsTaskProvider {
 
     _pool.remove(best);
     _seenIds.add(best.puzzle.id);
+    TacticsStorage.saveRecentPuzzleIds(_seenIds, mode: 'classic');
 
     debugPrint('[RatingAwareClassicProvider] Serving puzzle ${best.puzzle.id} '
         '(rating ${best.puzzle.rating}, target $targetRating, '

@@ -9,7 +9,7 @@
     "tags": ["mateIn1", "backRank", "obvious"],
     "phase": "endgame",
     "explanationShort": "Grundreihenmatt in 1",
-    "explanation": "Eine sehr typische und offensichtliche Stellung für ein Grundreihenmatt. Der weiße Turm zieht nach b8 und setzt den schwarzen König schachmatt, da dieser durch seine eigenen Bauern blockiert ist."
+    "explanation": "Eine sehr typische Stellung für ein Grundreihenmatt. Der weiße Turm zieht nach b8 und setzt den schwarzen König schachmatt."
   },
   {
     "id": "anti_win_2",
@@ -45,31 +45,7 @@
     "tags": ["mateIn1", "pin", "backRank"],
     "phase": "endgame",
     "explanationShort": "Grundreihenmatt durch Deckung",
-    "explanation": "Die weiße Dame kann den Turm auf d8 schlagen und setzt matt. Die Dame ist dabei durch den Turm auf e1 gedeckt (indirekt), aber da es Matt ist, ist das Spiel sofort vorbei."
-  },
-  {
-    "id": "anti_no_1",
-    "fen": "8/p4pkp/1p4p1/8/8/1P4P1/P4PKP/8 w - - 0 1",
-    "mode": "antiTactics",
-    "antiTacticsType": "noWinningTactic",
-    "expectedMoves": [],
-    "difficulty": 1000,
-    "tags": ["endgame", "equal", "quietPosition"],
-    "phase": "endgame",
-    "explanationShort": "Ausgeglichenes Bauernendspiel",
-    "explanation": "Dies ist ein völlig symmetrisches Bauernendspiel ohne jegliche taktische Motive. Jeder Versuch, eine Taktik zu erzwingen, würde höchstwahrscheinlich die Partie verlieren."
-  },
-  {
-    "id": "anti_no_2",
-    "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
-    "mode": "antiTactics",
-    "antiTacticsType": "noWinningTactic",
-    "expectedMoves": [],
-    "difficulty": 800,
-    "tags": ["opening", "development", "quietPosition"],
-    "phase": "opening",
-    "explanationShort": "Normale Eröffnungsphase",
-    "explanation": "Die Partie hat gerade erst begonnen (1.e4 e5). Es gibt keine direkten taktischen Einschläge. Die Spieler müssen sich zuerst entwickeln."
+    "explanation": "Die weiße Dame schlägt auf d8 und setzt schachmatt."
   },
   {
     "id": "anti_no_3",
@@ -81,19 +57,19 @@
     "tags": ["deceptive", "fakeTactic", "luft", "endgame"],
     "phase": "endgame",
     "explanationShort": "Kein Grundreihenmatt (Luftloch)",
-    "explanation": "Diese Stellung sieht auf den ersten Blick aus wie ein Grundreihenmatt. Der Zug Tb8 ist extrem verlockend, aber Schwarz hat den Bauern nach g7-g6 (bzw. hier fehlend) nicht gezogen, sondern h7-h6 oder f7-f6 (hier Fluchtfeld auf h7 vorhanden). Tb8+ wird einfach mit Kh7 beantwortet. Keine Taktik!"
+    "explanation": "Diese Stellung sieht verlockend aus wie ein Grundreihenmatt. Der Zug Tb8+ scheitert aber daran, dass Schwarz das Luftloch h7 hat. Kh7 weicht aus — keine Taktik!"
   },
   {
-    "id": "anti_no_4",
-    "fen": "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQR1K1 w - - 0 1",
+    "id": "anti_no_5",
+    "fen": "5rk1/5ppp/8/8/8/1Q6/5PPP/6K1 w - - 0 1",
     "mode": "antiTactics",
     "antiTacticsType": "noWinningTactic",
     "expectedMoves": [],
     "difficulty": 1200,
-    "tags": ["deceptive", "quietPosition", "middlegame"],
-    "phase": "middlegame",
-    "explanationShort": "Gut verteidigte Mittelspielstellung",
-    "explanation": "Eine sehr typische Mittelspielstellung aus der Italienischen Partie. Weiß hat zwar aktive Figuren, aber Schwarz ist grundsolide aufgebaut und alle Figuren sind gut gedeckt. Jeder unüberlegte Angriffsversuch würde ins Leere laufen."
+    "tags": ["deceptive", "fakeTactic", "defense"],
+    "phase": "endgame",
+    "explanationShort": "Kein Matt (Turm deckt Grundreihe)",
+    "explanation": "Der scheinbare Mattzug Db8 scheitert daran, dass der schwarze Turm auf f8 das Feld b8 gründlich deckt. Nach Txb8 verliert Weiß die Dame."
   },
   {
     "id": "anti_win_1_v2",
@@ -106,7 +82,7 @@
     "tags": ["mateIn1", "backRank", "obvious"],
     "phase": "endgame",
     "explanationShort": "Grundreihenmatt in 1 (V2)",
-    "explanation": "Eine sehr typische und offensichtliche Stellung für ein Grundreihenmatt. Der weiße Turm zieht nach b8 und setzt den schwarzen König schachmatt, da dieser durch seine eigenen Bauern blockiert ist."
+    "explanation": "Eine sehr typische Stellung für ein Grundreihenmatt. Der weiße Turm zieht nach b8 und setzt den schwarzen König schachmatt."
   },
   {
     "id": "anti_win_2_v2",
@@ -145,33 +121,7 @@
     "tags": ["mateIn1", "pin", "backRank"],
     "phase": "endgame",
     "explanationShort": "Grundreihenmatt durch Deckung (V2)",
-    "explanation": "Die weiße Dame kann den Turm auf d8 schlagen und setzt matt. Die Dame ist dabei durch den Turm auf e1 gedeckt (indirekt), aber da es Matt ist, ist das Spiel sofort vorbei."
-  },
-  {
-    "id": "anti_no_1_v2",
-    "fen": "8/p4pkp/1p4p1/8/8/1P4P1/P4PKP/8 w - - 0 1",
-    "mode": "antiTacticsV2",
-    "antiTacticsType": "noWinningTactic",
-    "expectedMoves": [],
-    "difficulty": 1000,
-    "version": 2,
-    "tags": ["endgame", "equal", "quietPosition"],
-    "phase": "endgame",
-    "explanationShort": "Ausgeglichenes Bauernendspiel (V2)",
-    "explanation": "Dies ist ein völlig symmetrisches Bauernendspiel ohne jegliche taktische Motive. Jeder Versuch, eine Taktik zu erzwingen, würde höchstwahrscheinlich die Partie verlieren."
-  },
-  {
-    "id": "anti_no_2_v2",
-    "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
-    "mode": "antiTacticsV2",
-    "antiTacticsType": "noWinningTactic",
-    "expectedMoves": [],
-    "difficulty": 800,
-    "version": 2,
-    "tags": ["opening", "development", "quietPosition"],
-    "phase": "opening",
-    "explanationShort": "Normale Eröffnungsphase (V2)",
-    "explanation": "Die Partie hat gerade erst begonnen (1.e4 e5). Es gibt keine direkten taktischen Einschläge. Die Spieler müssen sich zuerst entwickeln."
+    "explanation": "Die weiße Dame schlägt auf d8 und setzt schachmatt."
   },
   {
     "id": "anti_no_3_v2",
@@ -184,19 +134,19 @@
     "tags": ["deceptive", "fakeTactic", "luft", "endgame"],
     "phase": "endgame",
     "explanationShort": "Kein Grundreihenmatt (Luftloch) (V2)",
-    "explanation": "Diese Stellung sieht auf den ersten Blick aus wie ein Grundreihenmatt. Der Zug Tb8 ist extrem verlockend, aber Schwarz hat den Bauern nach g7-g6 (bzw. hier fehlend) nicht gezogen, sondern h7-h6 oder f7-f6 (hier Fluchtfeld auf h7 vorhanden). Tb8+ wird einfach mit Kh7 beantwortet. Keine Taktik!"
+    "explanation": "Diese Stellung sieht verlockend aus wie ein Grundreihenmatt. Der Zug Tb8+ scheitert aber daran, dass Schwarz das Luftloch h7 hat. Kh7 weicht aus — keine Taktik!"
   },
   {
-    "id": "anti_no_4_v2",
-    "fen": "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQR1K1 w - - 0 1",
+    "id": "anti_no_5_v2",
+    "fen": "5rk1/5ppp/8/8/8/1Q6/5PPP/6K1 w - - 0 1",
     "mode": "antiTacticsV2",
     "antiTacticsType": "noWinningTactic",
     "expectedMoves": [],
     "difficulty": 1200,
     "version": 2,
-    "tags": ["deceptive", "quietPosition", "middlegame"],
-    "phase": "middlegame",
-    "explanationShort": "Gut verteidigte Mittelspielstellung (V2)",
-    "explanation": "Eine sehr typische Mittelspielstellung aus der Italienischen Partie. Weiß hat zwar aktive Figuren, aber Schwarz ist grundsolide aufgebaut und alle Figuren sind gut gedeckt. Jeder unüberlegte Angriffsversuch würde ins Leere laufen."
+    "tags": ["deceptive", "fakeTactic", "defense"],
+    "phase": "endgame",
+    "explanationShort": "Kein Matt (Turm deckt Grundreihe) (V2)",
+    "explanation": "Der scheinbare Mattzug Db8 scheitert daran, dass der schwarze Turm auf f8 das Feld b8 deckt."
   }
 ]

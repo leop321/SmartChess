@@ -201,4 +201,21 @@ class TacticsStorage {
     final raw = history.map((r) => r.toSerializedString()).toList();
     await prefs.setStringList(_getHistoryKey(mode), raw);
   }
+
+  static String _getRecentIdsKey(String mode) => 'tacticsRecentSeenIds_$mode';
+
+  /// Loads recent seen puzzle IDs across app restarts (max 50).
+  static Future<List<String>> loadRecentPuzzleIds(
+      {String mode = 'classic'}) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_getRecentIdsKey(mode)) ?? [];
+  }
+
+  /// Saves recent seen puzzle IDs across app restarts.
+  static Future<void> saveRecentPuzzleIds(List<String> ids,
+      {String mode = 'classic'}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final trimmed = ids.length > 50 ? ids.sublist(ids.length - 50) : ids;
+    await prefs.setStringList(_getRecentIdsKey(mode), trimmed);
+  }
 }
