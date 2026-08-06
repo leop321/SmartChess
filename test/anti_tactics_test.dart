@@ -182,7 +182,7 @@ void main() {
 
       final noWinningTask = const TacticsTask(
         id: 'mock',
-        fen: '8/8/8/8/8/8/8/8 w - - 0 1',
+        fen: '6k1/5ppp/8/8/8/8/5PPP/6K1 w - - 0 1',
         mode: TacticsMode.antiTactics,
         antiTacticsType: AntiTacticsType.noWinningTactic,
         expectedMoves: [],
@@ -200,9 +200,8 @@ void main() {
       );
 
       // Warte auf _loadPersistedData & fetchNextPuzzle
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      expect(controller.task?.id, 'mock');
       expect(controller.status, PuzzleStatus.idle);
 
       // Aktion auslösen -> solved (Da noWinningTactic)

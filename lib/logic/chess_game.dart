@@ -89,7 +89,7 @@ class ChessGame extends FlameGame with TapCallbacks {
   }
 
   void forceSnapRotation() {
-    if (appModel.isBoardInverted && !appModel.isTacticsMode) {
+    if (appModel.isBoardInverted) {
       currentRotation = math.pi;
       targetRotation = math.pi;
       startRotation = math.pi;

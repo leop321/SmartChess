@@ -345,7 +345,10 @@ class AppModel extends ChangeNotifier {
   bool? _gameOverInvertedState;
 
   bool get isBoardInverted {
-    if (historyViewIndex != null || isAnalysisMode || isTacticsMode) {
+    if (isTacticsMode) {
+      return turn == Player.player2;
+    }
+    if (historyViewIndex != null || isAnalysisMode) {
       return playerSide == Player.player2;
     }
     if (_gameOverInvertedState != null && gameOver) {
