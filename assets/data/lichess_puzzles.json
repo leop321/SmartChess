@@ -1,328 +1,231 @@
 [
   {
-    "id": "real_600_1",
-    "fen": "4r1k1/5ppp/8/8/8/8/4QPPP/6K1 w - - 0 1",
+    "id": "TrCfq",
+    "fen": "r3k2r/pp3ppp/2n1p3/3p4/3P4/2PB1N2/PP3PPP/R3K2R w KQkq - 0 1",
     "solution": [
-      "e2e8"
+      "e1g1"
     ],
-    "rating": 600,
+    "rating": 650,
     "themes": [
-      "mateIn1",
-      "backRank",
-      "queen"
-    ],
-    "lastMove": "e8e8"
-  },
-  {
-    "id": "real_600_2",
-    "fen": "6k1/5ppp/8/8/4Q3/8/5PPP/6K1 w - - 0 1",
-    "solution": [
-      "e4e8"
-    ],
-    "rating": 600,
-    "themes": [
-      "mateIn1",
-      "backRank",
-      "queen"
-    ],
-    "lastMove": "g7g8"
-  },
-  {
-    "id": "real_700_1",
-    "fen": "r1b1k2r/pppp1ppp/8/4q3/8/8/PPPP1PPP/R1B1KB1R w KQkq - 0 1",
-    "solution": [
-      "f1e2"
-    ],
-    "rating": 700,
-    "themes": [
-      "blockCheck"
-    ],
-    "lastMove": "e8e5"
-  },
-  {
-    "id": "real_700_2",
-    "fen": "6k1/5ppp/8/8/8/8/5PPP/1R4K1 w - - 0 1",
-    "solution": [
-      "b1b8"
-    ],
-    "rating": 700,
-    "themes": [
-      "mateIn1",
-      "backRank",
-      "rook"
-    ],
-    "lastMove": "g7g8"
-  },
-  {
-    "id": "real_800_1",
-    "fen": "6k1/5ppp/8/8/8/8/8/1R4K1 w - - 0 1",
-    "solution": [
-      "b1b8"
-    ],
-    "rating": 800,
-    "themes": [
-      "mate",
-      "mateIn1",
-      "backRank"
-    ],
-    "lastMove": "g7g8"
-  },
-  {
-    "id": "real_800_2",
-    "fen": "r3k3/4p3/8/8/4Q3/8/8/4K3 w - - 0 1",
-    "solution": [
-      "e4a8"
-    ],
-    "rating": 800,
-    "themes": [
-      "fork",
-      "queen",
-      "unprotectedPiece"
-    ],
-    "lastMove": "a8e8"
-  },
-  {
-    "id": "real_800_3",
-    "fen": "3r2k1/5ppp/8/8/8/8/4QPPP/6K1 w - - 0 1",
-    "solution": [
-      "e2e7"
-    ],
-    "rating": 800,
-    "themes": [
-      "backRank",
-      "queen",
-      "attack"
-    ],
-    "lastMove": "a8d8"
-  },
-  {
-    "id": "real_800_4",
-    "fen": "1k1r4/pp3ppp/8/8/8/8/PP1Q1PPP/1K2R3 w - - 0 1",
-    "solution": [
-      "d2d8"
-    ],
-    "rating": 850,
-    "themes": [
-      "mateIn1",
-      "backRank",
-      "pin"
-    ],
-    "lastMove": "c8d8"
-  },
-  {
-    "id": "real_1200_1",
-    "fen": "4r1k1/1p3ppp/p7/3q4/8/3B4/PPP2PPP/1K1R4 w - - 0 1",
-    "solution": [
-      "d3h7",
-      "g8h7",
-      "d1d5"
-    ],
-    "rating": 1200,
-    "themes": [
-      "discoveredAttack",
-      "sacrifice",
-      "queenWin"
-    ],
-    "lastMove": "e8d8"
-  },
-  {
-    "id": "real_1400_1",
-    "fen": "r1b1r1k1/ppp2ppp/2n5/3p4/3P4/2PB1N2/PP1Q1PPP/R3R1K1 w - - 0 1",
-    "solution": [
-      "e1e8"
-    ],
-    "rating": 1400,
-    "themes": [
-      "backRank",
-      "rookTrade",
-      "mateIn1"
-    ],
-    "lastMove": "f8e8"
-  },
-  {
-    "id": "real_1400_2",
-    "fen": "2r1r1k1/1p3ppp/p7/3q4/8/3B4/PPP2PPP/1K1RR3 w - - 0 1",
-    "solution": [
-      "e1e8",
-      "c8e8",
-      "d3h7",
-      "g8h7",
-      "d1d5"
-    ],
-    "rating": 1400,
-    "themes": [
-      "discoveredAttack",
-      "queenWin",
-      "tactics"
-    ],
-    "lastMove": "f8e8"
-  },
-  {
-    "id": "real_1500_1",
-    "fen": "5rk1/1p3ppp/pq1Q1b2/8/8/1P3N2/P4PPP/3R2K1 b - - 3 27",
-    "solution": [
-      "f8d8",
-      "d6d8",
-      "f6d8"
-    ],
-    "rating": 1500,
-    "themes": [
-      "backRank",
-      "deflection",
-      "endgame"
-    ],
-    "lastMove": "g1g2"
-  },
-  {
-    "id": "real_1500_2",
-    "fen": "r2qr1k1/b1p2ppp/p5n1/P1p1p3/4P1n1/B2P2Pb/3NBP1P/RN1QR1K1 w - - 0 17",
-    "solution": [
-      "e2g4",
-      "h3g4",
-      "d1g4"
-    ],
-    "rating": 1520,
-    "themes": [
-      "hangingPiece",
-      "pieceTrade"
-    ],
-    "lastMove": "h7h3"
-  },
-  {
-    "id": "real_1600_1",
-    "fen": "r4rk1/ppp2ppp/2n5/3p4/3P1q2/2PB1N2/PP3PPP/R2Q1RK1 w - - 0 1",
-    "solution": [
-      "d3h7",
-      "g8h7",
-      "f3g5",
-      "f4g5"
-    ],
-    "rating": 1600,
-    "themes": [
-      "greekGift",
-      "sacrifice",
-      "attack"
-    ],
-    "lastMove": "c6d4"
-  },
-  {
-    "id": "real_1600_2",
-    "fen": "r1b2rk1/pp3ppp/2n1p3/3q4/3P4/3B1N2/PP1Q1PPP/R4RK1 w - - 0 1",
-    "solution": [
-      "d3h7",
-      "g8h7",
-      "f3g5",
-      "h7g8",
-      "d2d3"
-    ],
-    "rating": 1600,
-    "themes": [
-      "attack",
-      "sacrifice",
-      "kingside"
+      "opening",
+      "development"
     ],
     "lastMove": "c6e7"
   },
   {
-    "id": "real_1800_1",
-    "fen": "2r2rk1/pp3ppp/4p3/3p4/3P4/q1PQ4/PP3PPP/2R1R1K1 w - - 0 1",
+    "id": "NVDxI",
+    "fen": "r4rk1/pp3ppp/2p5/3p4/3Pn3/2PB1N2/PP3PPP/R3R1K1 w - - 0 1",
     "solution": [
-      "c3c4",
-      "a3d3",
-      "c1c8"
+      "d3e4",
+      "d5e4",
+      "e1e4"
     ],
-    "rating": 1800,
+    "rating": 850,
     "themes": [
-      "deflection",
-      "queenTrade",
-      "backRank"
+      "advantage",
+      "endgame",
+      "short"
     ],
-    "lastMove": "a7a3"
+    "lastMove": "e4d2"
   },
   {
-    "id": "real_1900_1",
-    "fen": "r6k/pp2r2p/4Rp1Q/3p4/8/1N1P2b1/PqP2PPP/7K w - - 0 25",
+    "id": "0009B",
+    "fen": "r2qr1k1/b1p2ppp/pp4n1/P1P1p3/4P1n1/B2P2Pb/3NBP1P/RN1QR1K1 b - - 1 16",
     "solution": [
+      "b6c5",
+      "e2g4",
+      "h3g4",
+      "d1g4"
+    ],
+    "rating": 1172,
+    "themes": [
+      "advantage",
+      "middlegame",
+      "short"
+    ],
+    "lastMove": "b6c5"
+  },
+  {
+    "id": "0000D",
+    "fen": "5rk1/1p3ppp/pq3b2/8/8/1P1Q1N2/P4PPP/3R2K1 w - - 2 27",
+    "solution": [
+      "d3d6",
+      "f8d8",
+      "d6d8",
+      "f6d8"
+    ],
+    "rating": 1518,
+    "themes": [
+      "advantage",
+      "endgame",
+      "short"
+    ],
+    "lastMove": "d3d6"
+  },
+  {
+    "id": "00008",
+    "fen": "r6k/pp2r2p/4Rp1Q/3p4/8/1N1P2R1/PqP2PbPP/7K b - - 0 24",
+    "solution": [
+      "f2g3",
       "e6e7",
       "b2b1",
       "b3c1",
       "b1c1",
       "h6c1"
     ],
-    "rating": 1900,
+    "rating": 1925,
     "themes": [
-      "backRankMate",
-      "queenSacrifice"
+      "crushing",
+      "hangingPiece",
+      "long",
+      "middlegame"
     ],
-    "lastMove": "g3f2"
+    "lastMove": "e6e8"
   },
   {
-    "id": "real_2000_1",
-    "fen": "2r3k1/pp3p1p/4p1p1/q2pP3/b2P4/P1R1P3/1P1QB1PP/5RK1 w - - 3 20",
+    "id": "y9vJg",
+    "fen": "r4bk1/pp3pbp/1q4p1/8/8/3QP2P/PPB2RP1/6K1 b - - 0 23",
     "solution": [
-      "c3c8",
-      "d8c8",
-      "d2a5"
+      "b6b2",
+      "c2b3",
+      "b2a1",
+      "f2f1"
     ],
-    "rating": 2000,
+    "rating": 2081,
     "themes": [
-      "discoveredAttack",
-      "tactics",
-      "queenWin"
+      "advantage",
+      "middlegame",
+      "long"
     ],
-    "lastMove": "a7a5"
+    "lastMove": "c2b3"
   },
   {
-    "id": "real_2000_2",
-    "fen": "r1bqr1k1/ppp2ppp/2n2n2/3p4/3P4/2PB1N2/PP1Q1PPP/R3R1K1 w - - 0 1",
+    "id": "b60nE",
+    "fen": "r7/1p2bp2/p1kn2p1/3N1p1p/3B1P2/3KP1R1/PPP4P/8 b - - 4 24",
     "solution": [
-      "e1e8",
-      "d8e8",
-      "a1e1",
-      "e8d8",
-      "d3h7"
+      "c6d5",
+      "c2c4",
+      "d6c4"
     ],
-    "rating": 2000,
+    "rating": 2163,
     "themes": [
-      "greekGift",
-      "discoveredAttack",
-      "master"
+      "crushing",
+      "endgame",
+      "short"
     ],
-    "lastMove": "f8e8"
+    "lastMove": "d5c7"
   },
   {
-    "id": "real_2200_1",
-    "fen": "r4rk1/1pp2ppp/2np4/p3p3/2B1P3/2PPP3/PP3RPP/R5K1 w - - 0 1",
+    "id": "3s3Kq",
+    "fen": "3q2r1/1p4pk/p3bb1p/4pP1Q/4P3/1P4R1/6PP/B4B1K b - - 0 31",
     "solution": [
-      "a1f1",
-      "c6d8",
-      "c4f7",
-      "d8f7",
-      "f2f7"
+      "e6f7",
+      "h5f7",
+      "d8d1"
     ],
-    "rating": 2200,
+    "rating": 2173,
     "themes": [
-      "f7pressure",
-      "overload",
-      "master"
+      "crushing",
+      "middlegame",
+      "short"
     ],
-    "lastMove": "a7a5"
+    "lastMove": "a1f6"
   },
   {
-    "id": "real_2400_1",
-    "fen": "r2q1rk1/1pp1bppp/p1np1n2/4p3/2B1P1b1/2NP1N2/PPP2PPP/R1BQR1K1 w - - 0 9",
+    "id": "5lq5C",
+    "fen": "6kr/pQpqp3/2npN1pb/4n2p/4P3/3P3P/P1P2RP1/5R1K b - - 8 21",
     "solution": [
-      "c4f7",
-      "f8f7",
-      "f3g5",
-      "g4d1"
+      "d7e6",
+      "b7c7",
+      "e6d7"
     ],
-    "rating": 2400,
+    "rating": 2176,
     "themes": [
-      "queenSacrifice",
-      "calculation",
-      "master"
+      "advantage",
+      "middlegame",
+      "short"
     ],
-    "lastMove": "c8g4"
+    "lastMove": "e6g7"
+  },
+  {
+    "id": "lPymB",
+    "fen": "r4r1k/1q5p/1b2p3/p2pPpNQ/P1P2P2/6RK/7P/R7 b - - 1 31",
+    "solution": [
+      "f8g8",
+      "g5f7",
+      "b7f7",
+      "h5f7"
+    ],
+    "rating": 2273,
+    "themes": [
+      "crushing",
+      "middlegame",
+      "long"
+    ],
+    "lastMove": "a1f1"
+  },
+  {
+    "id": "Z35qX",
+    "fen": "6rk/3bNpp1/p6p/8/5P1R/2r5/P2K4/7R b - - 1 40",
+    "solution": [
+      "g8e8",
+      "d2c3",
+      "e8e7"
+    ],
+    "rating": 2291,
+    "themes": [
+      "advantage",
+      "endgame",
+      "short"
+    ],
+    "lastMove": "e7g6"
+  },
+  {
+    "id": "y300w",
+    "fen": "R7/6k1/5rp1/3pKnNp/2pP1P2/2P5/P7/8 b - - 7 48",
+    "solution": [
+      "f6f8",
+      "a8f8",
+      "g7f8"
+    ],
+    "rating": 2340,
+    "themes": [
+      "crushing",
+      "endgame",
+      "short"
+    ],
+    "lastMove": "a8f8"
+  },
+  {
+    "id": "43wLw",
+    "fen": "B7/5pk1/pR2p3/Pp1r3P/1Pp3K1/1bP3P1/8/8 b - - 2 54",
+    "solution": [
+      "d5d3",
+      "b6a6",
+      "b3d5"
+    ],
+    "rating": 2356,
+    "themes": [
+      "advantage",
+      "endgame",
+      "short"
+    ],
+    "lastMove": "b3c2"
+  },
+  {
+    "id": "M75q4",
+    "fen": "r4r1k/1q3ppp/1b2p3/p2pPnN1/P1P2P2/6RK/7P/R7 b - - 1 30",
+    "solution": [
+      "f8g8",
+      "g5f7",
+      "b7f7"
+    ],
+    "rating": 2409,
+    "themes": [
+      "crushing",
+      "middlegame",
+      "short"
+    ],
+    "lastMove": "g3g5"
   }
 ]
