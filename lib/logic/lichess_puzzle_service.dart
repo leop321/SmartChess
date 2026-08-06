@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../model/lichess_puzzle.dart';
@@ -35,13 +36,20 @@ class LichessPuzzleService {
 
   Future<LichessPuzzle> _fetch(String url) async {
     try {
-      final response = await _client.get(
-        Uri.parse(url),
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'ChessApp/1.0 (Flutter App; contact@chessapp.internal)',
-        },
-      ).timeout(_timeout);
+      final headers = <String, String>{
+        'Accept': 'application/json',
+      };
+      if (!kIsWeb) {
+        headers['User-Agent'] =
+            'ChessApp/1.0 (Flutter App; contact@chessapp.internal)';
+      }
+
+      final response = await _client
+          .get(
+            Uri.parse(url),
+            headers: headers,
+          )
+          .timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;

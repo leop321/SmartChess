@@ -129,28 +129,42 @@ class RatingAwareClassicProvider implements TacticsTaskProvider {
     }
 
     // Prefer entries not yet seen this session; fall back to the full pool.
-    final candidates =
+    var candidates =
         _pool.where((e) => !_seenIds.contains(e.puzzle.id)).toList();
+
+    if (candidates.isEmpty && _pool.isNotEmpty) {
+      _seenIds.clear();
+      candidates = List.from(_pool);
+    }
+
     final source = candidates.isNotEmpty ? candidates : _pool;
 
-    // Select the puzzle closest to the target rating.
-    _PoolEntry? best;
-    int bestDelta = 0x7fffffff;
+    // Find the minimum rating delta among available puzzles.
+    int minDelta = 0x7fffffff;
     for (final entry in source) {
       final delta = (entry.puzzle.rating - targetRating).abs();
-      if (delta < bestDelta) {
-        bestDelta = delta;
-        best = entry;
+      if (delta < minDelta) {
+        minDelta = delta;
       }
     }
-    best ??= source[Random().nextInt(source.length)];
+
+    // Filter to all candidate puzzles within a reasonable rating proximity (minDelta + 300 ELO).
+    final eligible = source.where((e) {
+      final delta = (e.puzzle.rating - targetRating).abs();
+      return delta <= minDelta + 300;
+    }).toList();
+
+    // Select randomly among all eligible candidates to ensure variety every session.
+    final best = eligible.isNotEmpty
+        ? eligible[Random().nextInt(eligible.length)]
+        : source[Random().nextInt(source.length)];
 
     _pool.remove(best);
     _seenIds.add(best.puzzle.id);
 
     debugPrint('[RatingAwareClassicProvider] Serving puzzle ${best.puzzle.id} '
         '(rating ${best.puzzle.rating}, target $targetRating, '
-        'delta $bestDelta, pool size ${_pool.length})');
+        'minDelta $minDelta, pool size ${_pool.length})');
 
     return _mapToTask(best.puzzle);
   }
