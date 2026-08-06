@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../logic/game_controller.dart';
+import '../../../logic/game_mode_notifier.dart';
 import '../../../model/app_model.dart';
 import '../../../model/app_themes.dart';
 import '../../chess_view.dart';
@@ -72,11 +74,15 @@ class MainMenuButtons extends StatelessWidget {
             ready: ready,
             onPressed: () {
               appModel.haptic.light();
+              // Read the selected chess mode from Riverpod and wire it into
+              // AppModel so the rating table and board-input guard are set
+              // correctly before ChessView initialises.
+              final mode = providerContainer.read(gameModeProvider);
               Navigator.push(
                 context,
                 CupertinoPageRoute(
                   builder: (context) {
-                    return ChessView(appModel);
+                    return ChessView(appModel, mode: mode);
                   },
                 ),
               ).then((_) {

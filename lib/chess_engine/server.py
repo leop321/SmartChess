@@ -14,6 +14,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from bot_orchestrator import BotOrchestrator, MoveSource
@@ -55,6 +56,15 @@ app = FastAPI(
     description="REST API für Schach-Bot-Engines und Eröffnungsbücher.",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+# CORS-Unterstützung für Web-Clients aktivieren
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

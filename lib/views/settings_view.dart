@@ -2,9 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../logic/game_mode_notifier.dart';
 import '../model/app_model.dart';
 import '../model/app_themes.dart';
 import 'components/settings_view/app_theme_picker.dart';
+import 'components/settings_view/linked_accounts_section.dart';
 import 'components/settings_view/piece_theme_picker.dart';
 import 'components/settings_view/toggles.dart';
 import 'components/shared/bottom_padding.dart';
@@ -283,9 +285,14 @@ class _SettingsViewState extends State<SettingsView> {
                                     RatingAdjustmentTile(appModel: appModel),
                                     const SizedBox(height: 24),
                                     Toggles(appModel),
+                                    const SizedBox(height: 24),
+                                    TextToSpeechSettings(appModel),
                                   ],
                                 ),
                               ),
+                              const SizedBox(height: 24),
+                              // ── Linked Accounts ──────────────────────
+                              const LinkedAccountsSection(),
                               const SizedBox(height: 32),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -337,9 +344,11 @@ class RatingAdjustmentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = appModel.theme;
-    final isLocked = appModel.isRatingAdjustmentLocked;
-    final count = appModel.ratingAdjustmentsCount;
-    final cooldownDays = appModel.ratingAdjustmentCooldownDaysLeft;
+    final isBlind = appModel.gameMode == ChessMode.blind ||
+        appModel.gameMode == ChessMode.snapshot;
+    final isLocked = appModel.isRatingAdjustmentLocked(isBlind);
+    final count = appModel.getRatingAdjustmentsCount(isBlind);
+    final cooldownDays = appModel.getRatingAdjustmentCooldownDaysLeft(isBlind);
 
     return GlassPanel(
       padding: const EdgeInsets.all(16),
@@ -347,7 +356,9 @@ class RatingAdjustmentTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'MANUAL RATING ADJUSTMENT',
+            isBlind
+                ? 'MANUAL BLIND RATING ADJUSTMENT'
+                : 'MANUAL RATING ADJUSTMENT',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
@@ -695,7 +706,10 @@ class RatingAdjustmentTile extends StatelessWidget {
                               final text = controller.text.trim();
                               final val = int.tryParse(text);
                               if (val != null && val >= 100 && val <= 3200) {
-                                await appModel.adjustUserRating(val);
+                                final isBlind =
+                                    appModel.gameMode == ChessMode.blind ||
+                                        appModel.gameMode == ChessMode.snapshot;
+                                await appModel.adjustUserRating(val, isBlind);
                                 if (dialogContext.mounted) {
                                   Navigator.pop(dialogContext);
                                 }

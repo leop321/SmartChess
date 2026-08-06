@@ -40,6 +40,8 @@ dependencies:
   just_audio: ^0.10.6
   http: ^1.6.0
   flutter_riverpod: ^3.3.2
+  flutter_tts: ^4.0.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -112,3 +114,4 @@ flutter:
     - assets/audio/lose.wav
     - assets/audio/tie.wav
     - assets/audio/
+    - assets/data/

@@ -18,6 +18,7 @@ class AdService {
   /// Test App ID for Android: ca-app-pub-3940256099942544~3347511713
   /// Test App ID for iOS:     ca-app-pub-3940256099942544~1458002511
   static String get _rewardedInterstitialAdUnitId {
+    if (kIsWeb) return '';
     if (Platform.isAndroid) {
       return 'ca-app-pub-1620835257397609/5968714376';
     } else if (Platform.isIOS) {
@@ -38,6 +39,7 @@ class AdService {
   /// Initializes the Mobile Ads SDK and pre-loads the first ad.
   /// Must be called once in [main()] after [WidgetsFlutterBinding.ensureInitialized()].
   Future<void> initialize() async {
+    if (kIsWeb) return;
     if (_isInitialized) return;
     await MobileAds.instance.initialize();
     _isInitialized = true;

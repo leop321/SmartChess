@@ -89,7 +89,7 @@ class ChessGame extends FlameGame with TapCallbacks {
   }
 
   void forceSnapRotation() {
-    if (appModel.isBoardInverted) {
+    if (appModel.isBoardInverted && !appModel.isTacticsMode) {
       currentRotation = math.pi;
       targetRotation = math.pi;
       startRotation = math.pi;
@@ -169,15 +169,19 @@ class ChessGame extends FlameGame with TapCallbacks {
   void render(Canvas canvas) {
     super.render(canvas);
 
+    final frozen = appModel.gameController?.boardFrozen ?? false;
+
     _drawBoard(canvas);
-    if (appModel.showHints) {
+    if (appModel.showHints && !frozen) {
       _drawCheckHint(canvas);
       _drawLatestMove(canvas);
     }
-    _drawWarningHint(canvas);
-    _drawSelectedPieceHint(canvas);
+    if (!frozen) {
+      _drawWarningHint(canvas);
+      _drawSelectedPieceHint(canvas);
+    }
     _drawPieces(canvas);
-    if (appModel.showHints) {
+    if (appModel.showHints && !frozen) {
       _drawMoveHints(canvas);
     }
   }
@@ -191,8 +195,11 @@ class ChessGame extends FlameGame with TapCallbacks {
       _updatePaints();
     }
 
+    // In tactics mode the board flip is handled externally by a RotatedBox
+    // in TacticsPuzzleView, so we keep internal rotation at 0 to avoid
+    // double-rotating the canvas.
     double newTargetRotation = 0;
-    if (appModel.isBoardInverted) {
+    if (appModel.isBoardInverted && !appModel.isTacticsMode) {
       newTargetRotation = math.pi;
     } else {
       newTargetRotation = 0;
@@ -218,16 +225,20 @@ class ChessGame extends FlameGame with TapCallbacks {
       currentRotation = targetRotation;
     }
 
-    // Rebuild the piece list if the count changed (capture / promotion).
-    // This is cheaper than creating a FollowedByIterable every tick.
-    final currentCount =
-        board.player1Pieces.length + board.player2Pieces.length;
-    if (currentCount != _allPieces.length) {
-      _rebuildPieceCache();
-    }
+    final frozen = appModel.gameController?.boardFrozen ?? false;
 
-    for (var piece in _allPieces) {
-      spriteMap[piece]?.update(tileSize ?? 0, appModel, piece, t);
+    if (!frozen) {
+      // Rebuild the piece list if the count changed (capture / promotion).
+      // This is cheaper than creating a FollowedByIterable every tick.
+      final currentCount =
+          board.player1Pieces.length + board.player2Pieces.length;
+      if (currentCount != _allPieces.length) {
+        _rebuildPieceCache();
+      }
+
+      for (var piece in _allPieces) {
+        spriteMap[piece]?.update(tileSize ?? 0, appModel, piece, t);
+      }
     }
   }
 
@@ -259,7 +270,19 @@ class ChessGame extends FlameGame with TapCallbacks {
   }
 
   void snapSprites({bool snap = true}) {
+    final frozen = appModel.gameController?.boardFrozen ?? false;
+    if (frozen) return;
+
     _rebuildPieceCache();
+
+    // Create sprites for any new pieces that were added (e.g. from loadFEN)
+    for (var piece in _allPieces) {
+      if (!spriteMap.containsKey(piece)) {
+        spriteMap[piece] = ChessPieceSprite(piece, appModel.pieceTheme);
+        spriteMap[piece]?.initSpritePosition(tileSize ?? 0, appModel);
+      }
+    }
+
     if (snap) {
       for (var piece in _allPieces) {
         spriteMap[piece]?.snapToPiece(piece, tileSize ?? 0, appModel);
@@ -283,6 +306,12 @@ class ChessGame extends FlameGame with TapCallbacks {
   }
 
   double _getPieceRotation() {
+    if (appModel.isAnalysisMode ||
+        appModel.isTacticsMode ||
+        appModel.historyViewIndex != null) {
+      return appModel.isBoardInverted ? math.pi : 0;
+    }
+
     if (appModel.enableRotation) {
       return -currentRotation;
     }

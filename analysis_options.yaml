@@ -1,4 +1,10 @@
+analyzer:
+  exclude:
+    - _MoveChessApp/**
+    - screenshots_editor/**
+
 linter:
   rules:
     - prefer_relative_imports
     - directives_ordering
+

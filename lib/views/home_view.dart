@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../logic/shared_functions.dart';
 import '../model/app_model.dart';
 import '../model/app_themes.dart';
+import 'chess_view.dart';
 import 'components/shared/glass_panel.dart';
 import 'game_setup_view.dart';
 
@@ -67,14 +68,39 @@ class HomeView extends StatelessWidget {
                           // Profile Header
                           _ProfileHeaderWidget(appModel: appModel),
                           const SizedBox(height: 24),
-                          // Rating Card
-                          _RatingWidget(appModel: appModel),
+                          // Rating Cards
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: _RatingCard(
+                                      appModel: appModel, isBlind: false)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: _RatingCard(
+                                      appModel: appModel, isBlind: true)),
+                            ],
+                          ),
                           const SizedBox(height: 16),
                           // Beaten Bots Card
                           _BeatenBotsWidget(appModel: appModel),
                           const SizedBox(height: 24),
                           // Play Button
-                          _PlayButtonWidget(appModel: appModel),
+                          if (appModel.hasSavedGame) ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child:
+                                      _ResumeSquareButton(appModel: appModel),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _PlaySquareButton(appModel: appModel),
+                                ),
+                              ],
+                            ),
+                          ] else ...[
+                            _PlayButtonWidget(appModel: appModel),
+                          ],
                         ],
                       );
                     },
@@ -152,7 +178,7 @@ class _ProfileHeaderWidget extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                _rankTitle(appModel.userRating),
+                _rankTitle(appModel.userRatingNormal),
                 style: TextStyle(
                   fontSize: 13,
                   color: theme.lightTile.withValues(alpha: 0.8),
@@ -192,61 +218,67 @@ class _ProfileHeaderWidget extends StatelessWidget {
 // Rating Widget
 // ─────────────────────────────────────────────────────
 
-class _RatingWidget extends StatelessWidget {
+class _RatingCard extends StatelessWidget {
   final AppModel appModel;
-  const _RatingWidget({required this.appModel});
+  final bool isBlind;
+  const _RatingCard({required this.appModel, required this.isBlind});
 
   @override
   Widget build(BuildContext context) {
     final theme = appModel.theme;
-    final rating = appModel.userRating;
-    final (nextMilestone, prevMilestone) = _milestones(rating);
-    final progress = (rating - prevMilestone) / (nextMilestone - prevMilestone);
+
+    final rating =
+        isBlind ? appModel.userRatingBlind : appModel.userRatingNormal;
+    final lastChange = isBlind
+        ? appModel.lastGameRatingChangeBlind
+        : appModel.lastGameRatingChangeNormal;
+    final lastDate =
+        isBlind ? appModel.lastGameDateBlind : appModel.lastGameDateNormal;
+    final todayChange = isBlind
+        ? appModel.todayRatingChangeBlind
+        : appModel.todayRatingChangeNormal;
 
     final now = DateTime.now();
     final todayStr =
-        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-    final isToday = appModel.lastGameDate == todayStr;
-    final change =
-        isToday ? appModel.todayRatingChange : appModel.lastGameRatingChange;
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final isToday = lastDate == todayStr;
+    final change = isToday ? todayChange : lastChange;
+
+    final (nextMilestone, prevMilestone) = _milestones(rating);
+    final progress = (rating - prevMilestone) / (nextMilestone - prevMilestone);
 
     return GlassPanel(
-      borderRadius: 20,
-      padding: const EdgeInsets.all(20),
+      borderRadius: 16,
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'RATING',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: theme.lightTile.withValues(alpha: 0.6),
-                  letterSpacing: 2,
-                ),
-              ),
-              Icon(Icons.bar_chart_rounded,
-                  color: theme.lightTile.withValues(alpha: 0.5), size: 18),
-            ],
+          Text(
+            isBlind ? 'BLIND' : 'NORMAL',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: theme.lightTile.withValues(alpha: 0.6),
+              letterSpacing: 2,
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+
+          // Rating number + change badge
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 '$rating',
                 style: const TextStyle(
-                  fontSize: 42,
+                  fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFFE5E2E1),
                   letterSpacing: -1,
                   height: 1,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               if (change != 0) _buildChangeIndicator(change, isToday),
             ],
           ),
@@ -254,12 +286,13 @@ class _RatingWidget extends StatelessWidget {
           Text(
             _rankTitle(rating),
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               color: theme.lightTile,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+
           // Progress bar
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,25 +303,25 @@ class _RatingWidget extends StatelessWidget {
                   Text(
                     '$prevMilestone',
                     style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 9,
                         color: const Color(0xFFE5E2E1).withValues(alpha: 0.4)),
                   ),
                   Text(
-                    'Next Level: $nextMilestone',
+                    '$nextMilestone',
                     style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 9,
                         color: const Color(0xFFE5E2E1).withValues(alpha: 0.4)),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
                   value: progress.clamp(0.0, 1.0),
                   backgroundColor: theme.lightTile.withValues(alpha: 0.12),
                   valueColor: AlwaysStoppedAnimation<Color>(theme.lightTile),
-                  minHeight: 6,
+                  minHeight: 4,
                 ),
               ),
             ],
@@ -321,27 +354,20 @@ class _RatingWidget extends StatelessWidget {
     final color =
         isPositive ? const Color(0xFF4CAF50) : const Color(0xFFFF5252);
     final sign = isPositive ? '+' : '';
-    final label = isToday ? 'today' : 'last game';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Text(
-        '$sign$change ($label)',
+        '$sign$change',
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: FontWeight.bold,
           color: color,
-          shadows: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.4),
-              blurRadius: 8,
-            ),
-          ],
         ),
       ),
     );
@@ -367,7 +393,9 @@ class _BeatenBotsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = appModel.theme;
-    final beaten = appModel.beatenBots;
+    final beatenNormal = appModel.beatenBots;
+    final beatenBlind = appModel.beatenBotsBlind;
+    final uniqueBeaten = (beatenNormal.toSet()..addAll(beatenBlind)).length;
 
     return GlassPanel(
       borderRadius: 20,
@@ -388,7 +416,7 @@ class _BeatenBotsWidget extends StatelessWidget {
                 ),
               ),
               Text(
-                '${beaten.length}/${_bots.length}',
+                '$uniqueBeaten/${_bots.length}',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -400,7 +428,14 @@ class _BeatenBotsWidget extends StatelessWidget {
           const SizedBox(height: 16),
           ..._bots.map((bot) {
             final (difficulty, name, elo) = bot;
-            final isBeaten = beaten.contains(difficulty);
+            final isBeatenNormal = beatenNormal.contains(difficulty);
+            final isBeatenBlind = beatenBlind.contains(difficulty);
+            final isBeaten = isBeatenNormal || isBeatenBlind;
+
+            final Color statusColor = isBeatenBlind
+                ? const Color(0xFFFF9800) // Orange for Blind
+                : const Color(0xFF2196F3); // Blue for Normal
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
@@ -413,11 +448,11 @@ class _BeatenBotsWidget extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isBeaten
-                          ? theme.lightTile.withValues(alpha: 0.15)
+                          ? statusColor.withValues(alpha: 0.15)
                           : const Color(0xFF1E1E1E).withValues(alpha: 0.5),
                       border: Border.all(
                         color: isBeaten
-                            ? theme.lightTile.withValues(alpha: 0.5)
+                            ? statusColor.withValues(alpha: 0.5)
                             : const Color(0xFFFFFFFF).withValues(alpha: 0.08),
                         width: 1.5,
                       ),
@@ -425,7 +460,7 @@ class _BeatenBotsWidget extends StatelessWidget {
                     child: Center(
                       child: isBeaten
                           ? Icon(Icons.check_rounded,
-                              color: theme.lightTile, size: 16)
+                              color: statusColor, size: 16)
                           : Icon(Icons.lock_outline_rounded,
                               color: const Color(0xFFE5E2E1)
                                   .withValues(alpha: 0.3),
@@ -466,15 +501,15 @@ class _BeatenBotsWidget extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: theme.lightTile.withValues(alpha: 0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Defeated',
+                        isBeatenBlind ? 'Blind Defeated' : 'Defeated',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: theme.lightTile,
+                          color: statusColor,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -591,7 +626,7 @@ class _PlayButtonWidget extends StatelessWidget {
 // ─────────────────────────────────────────────────────
 
 class _PieceAvatar extends StatelessWidget {
-  final String avatar; // e.g. "king_white", "pawn_black"
+  final String avatar; // e.g. "king_white", "pawn_black", or emoji like "😎"
   final String pieceTheme;
   final double size;
 
@@ -603,6 +638,16 @@ class _PieceAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!avatar.contains('_')) {
+      // It's an emoji
+      return Center(
+        child: Text(
+          avatar,
+          style: TextStyle(fontSize: size * 0.7),
+        ),
+      );
+    }
+
     final path =
         'assets/images/pieces/${formatPieceTheme(pieceTheme)}/$avatar.png';
     return Padding(
@@ -669,6 +714,7 @@ class _ProfileDialogContentState extends State<_ProfileDialogContent> {
 
   static const _pieces = ['king', 'queen', 'rook', 'bishop', 'knight', 'pawn'];
   static const _colors = ['white', 'black'];
+  static const _emojis = ['😎', '🤓', '🤖', '👾', '👽', '👻', '👑'];
 
   @override
   void initState() {
@@ -872,21 +918,33 @@ class _ProfileDialogContentState extends State<_ProfileDialogContent> {
 
   Widget _buildAvatarGrid(AppTheme theme, String pieceTheme) {
     return SizedBox(
-      height: 130,
-      child: GridView.count(
-        crossAxisCount: 6,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        children: [
-          for (final color in _colors)
-            for (final piece in _pieces)
-              _buildAvatarCell(
-                '${piece}_$color',
-                pieceTheme,
-                theme,
+      height: 60,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            for (final color in _colors)
+              for (final piece in _pieces)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: _buildAvatarCell(
+                    '${piece}_$color',
+                    pieceTheme,
+                    theme,
+                  ),
+                ),
+            for (final emoji in _emojis)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: _buildAvatarCell(
+                  emoji,
+                  pieceTheme,
+                  theme,
+                ),
               ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -964,6 +1022,182 @@ class _ProfileDialogContentState extends State<_ProfileDialogContent> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// Resume & Play Square Buttons (Bottom grid when resuming)
+// ─────────────────────────────────────────────────────
+
+class _ResumeSquareButton extends StatelessWidget {
+  final AppModel appModel;
+  const _ResumeSquareButton({required this.appModel});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = appModel.theme;
+    return Container(
+      height: 90,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF).withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFFFFFFF).withValues(alpha: 0.12),
+          width: 1.5,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 16,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          appModel.haptic.light();
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => ChessView(appModel, isResuming: true),
+            ),
+          ).then((_) {
+            appModel.checkSavedGame();
+          });
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.play_circle_filled_rounded,
+              color: theme.lightTile,
+              size: 26,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'RESUME',
+              style: TextStyle(
+                color: theme.lightTile,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Continue match',
+              style: TextStyle(
+                color: theme.lightTile.withValues(alpha: 0.5),
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlaySquareButton extends StatelessWidget {
+  final AppModel appModel;
+  const _PlaySquareButton({required this.appModel});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = appModel.theme;
+    final primaryBg = theme.moveHint.withValues(alpha: 1.0);
+    final isDark =
+        ThemeData.estimateBrightnessForColor(primaryBg) == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF241A00);
+
+    return Selector<AppModel, bool>(
+      selector: (_, m) => m.imagesReady,
+      builder: (context, ready, _) {
+        return Container(
+          height: 90,
+          decoration: BoxDecoration(
+            color: primaryBg.withValues(alpha: ready ? 1.0 : 0.55),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: ready
+                ? [
+                    BoxShadow(
+                      color: primaryBg.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: ready
+                ? () {
+                    appModel.haptic.light();
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (context) => const GameSetupView(),
+                      ),
+                    ).then((_) {
+                      appModel.checkSavedGame();
+                    });
+                  }
+                : null,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (ready)
+                  SizedBox(
+                    width: 26,
+                    height: 26,
+                    child: Image.asset(
+                      'assets/images/pieces/${formatPieceTheme(appModel.pieceTheme)}/pawn_white.png',
+                      fit: BoxFit.contain,
+                      color: textColor,
+                      colorBlendMode: BlendMode.srcIn,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.sports_esports_outlined,
+                        color: textColor,
+                        size: 22,
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white70,
+                    ),
+                  ),
+                const SizedBox(height: 6),
+                Text(
+                  ready ? 'NEW GAME' : '',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  ready ? 'Start custom game' : 'Loading...',
+                  style: TextStyle(
+                    color: textColor.withValues(alpha: 0.7),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

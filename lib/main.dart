@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:flame/flame.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
 import 'logic/ad_service.dart';
+import 'logic/game_controller.dart';
 import 'logic/in_app_update_service.dart';
 import 'logic/play_games_service.dart';
 import 'logic/shared_functions.dart';
@@ -31,13 +34,17 @@ void main() async {
   // Images are decoded *after* runApp() so the main thread is never blocked
   // before the first render.
   runApp(
-    ChangeNotifierProvider.value(
-      value: appModel,
-      child: Chess(),
+    UncontrolledProviderScope(
+      container: providerContainer,
+      child: ChangeNotifierProvider.value(
+        value: appModel,
+        child: Chess(),
+      ),
     ),
   );
 
   // Preload only the logo synchronously (single tiny image for splash).
+
   // Piece images load asynchronously; appModel.imagesReady gates navigation.
   await _preloadLogoImage();
 
@@ -148,6 +155,11 @@ class Chess extends StatelessWidget {
     return CupertinoApp(
       debugShowCheckedModeBanner: false,
       title: 'Chess',
+      localizationsDelegates: const [
+        DefaultMaterialLocalizations.delegate,
+        DefaultCupertinoLocalizations.delegate,
+        DefaultWidgetsLocalizations.delegate,
+      ],
       theme: CupertinoThemeData(
         brightness: Brightness.dark,
         textTheme: CupertinoTextThemeData(

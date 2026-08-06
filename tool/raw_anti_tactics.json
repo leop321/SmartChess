@@ -1,0 +1,98 @@
+[
+  {
+    "id": "anti_win_1",
+    "fen": "6k1/5ppp/8/8/8/8/8/1R4K1 w - - 0 1",
+    "mode": "antiTactics",
+    "antiTacticsType": "winningTacticExists",
+    "expectedMoves": ["b1b8"],
+    "difficulty": 800,
+    "tags": ["mateIn1", "backRank", "obvious"],
+    "phase": "endgame",
+    "explanationShort": "Grundreihenmatt in 1",
+    "explanation": "Eine sehr typische und offensichtliche Stellung für ein Grundreihenmatt. Der weiße Turm zieht nach b8 und setzt den schwarzen König schachmatt, da dieser durch seine eigenen Bauern blockiert ist."
+  },
+  {
+    "id": "anti_win_2",
+    "fen": "r3k3/8/8/8/4Q3/8/8/4K3 w - - 0 1",
+    "mode": "antiTactics",
+    "antiTacticsType": "winningTacticExists",
+    "expectedMoves": ["e4a8"],
+    "difficulty": 1000,
+    "tags": ["fork", "queen", "unprotectedPiece"],
+    "phase": "middlegame",
+    "explanationShort": "Dame gewinnt ungedeckten Turm",
+    "explanation": "Die weiße Dame greift gleichzeitig den ungedeckten Turm auf a8 an. Dies ist ein klarer Materialgewinn durch einen Doppelangriff."
+  },
+  {
+    "id": "anti_win_3",
+    "fen": "4r1k1/1p3ppp/p7/3q4/8/3B4/PPP2PPP/1K1R4 w - - 0 1",
+    "mode": "antiTactics",
+    "antiTacticsType": "winningTacticExists",
+    "expectedMoves": ["d3h7"],
+    "difficulty": 1400,
+    "tags": ["discoveredAttack", "sacrifice", "queenWin"],
+    "phase": "middlegame",
+    "explanationShort": "Abzugsangriff gewinnt die Dame",
+    "explanation": "Ein klassischer Abzugsangriff: Der Läufer opfert sich auf h7 mit Schach. Dadurch wird die Linie für den weißen Turm auf d1 frei, der im nächsten Zug die schwarze Dame auf d5 gewinnt."
+  },
+  {
+    "id": "anti_win_4",
+    "fen": "1k1r4/pp3ppp/8/8/8/8/PP1Q1PPP/1K2R3 w - - 0 1",
+    "mode": "antiTactics",
+    "antiTacticsType": "winningTacticExists",
+    "expectedMoves": ["d2d8"],
+    "difficulty": 900,
+    "tags": ["mateIn1", "pin", "backRank"],
+    "phase": "endgame",
+    "explanationShort": "Grundreihenmatt durch Deckung",
+    "explanation": "Die weiße Dame kann den Turm auf d8 schlagen und setzt matt. Die Dame ist dabei durch den Turm auf e1 gedeckt (indirekt), aber da es Matt ist, ist das Spiel sofort vorbei."
+  },
+  {
+    "id": "anti_no_1",
+    "fen": "8/p4pkp/1p4p1/8/8/1P4P1/P4PKP/8 w - - 0 1",
+    "mode": "antiTactics",
+    "antiTacticsType": "noWinningTactic",
+    "expectedMoves": [],
+    "difficulty": 1000,
+    "tags": ["endgame", "equal", "quietPosition"],
+    "phase": "endgame",
+    "explanationShort": "Ausgeglichenes Bauernendspiel",
+    "explanation": "Dies ist ein völlig symmetrisches Bauernendspiel ohne jegliche taktische Motive. Jeder Versuch, eine Taktik zu erzwingen, würde höchstwahrscheinlich die Partie verlieren."
+  },
+  {
+    "id": "anti_no_2",
+    "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+    "mode": "antiTactics",
+    "antiTacticsType": "noWinningTactic",
+    "expectedMoves": [],
+    "difficulty": 800,
+    "tags": ["opening", "development", "quietPosition"],
+    "phase": "opening",
+    "explanationShort": "Normale Eröffnungsphase",
+    "explanation": "Die Partie hat gerade erst begonnen (1.e4 e5). Es gibt keine direkten taktischen Einschläge. Die Spieler müssen sich zuerst entwickeln."
+  },
+  {
+    "id": "anti_no_3",
+    "fen": "6k1/5pp1/8/8/8/8/8/1R4K1 w - - 0 1",
+    "mode": "antiTactics",
+    "antiTacticsType": "noWinningTactic",
+    "expectedMoves": [],
+    "difficulty": 1500,
+    "tags": ["deceptive", "fakeTactic", "luft", "endgame"],
+    "phase": "endgame",
+    "explanationShort": "Kein Grundreihenmatt (Luftloch)",
+    "explanation": "Diese Stellung sieht auf den ersten Blick aus wie ein Grundreihenmatt. Der Zug Tb8 ist extrem verlockend, aber Schwarz hat den Bauern nach g7-g6 (bzw. hier fehlend) nicht gezogen, sondern h7-h6 oder f7-f6 (hier Fluchtfeld auf h7 vorhanden). Tb8+ wird einfach mit Kh7 beantwortet. Keine Taktik!"
+  },
+  {
+    "id": "anti_no_4",
+    "fen": "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQR1K1 w - - 0 1",
+    "mode": "antiTactics",
+    "antiTacticsType": "noWinningTactic",
+    "expectedMoves": [],
+    "difficulty": 1200,
+    "tags": ["deceptive", "quietPosition", "middlegame"],
+    "phase": "middlegame",
+    "explanationShort": "Gut verteidigte Mittelspielstellung",
+    "explanation": "Eine sehr typische Mittelspielstellung aus der Italienischen Partie. Weiß hat zwar aktive Figuren, aber Schwarz ist grundsolide aufgebaut und alle Figuren sind gut gedeckt. Jeder unüberlegte Angriffsversuch würde ins Leere laufen."
+  }
+]

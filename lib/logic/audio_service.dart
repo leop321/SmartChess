@@ -21,6 +21,16 @@ class AudioService {
     FlameAudio.play('piece_moved.mp3');
   }
 
+  void playWinSound() {
+    if (!_enabled) return;
+    FlameAudio.play('win.wav');
+  }
+
+  void playLoseSound() {
+    if (!_enabled) return;
+    FlameAudio.play('lose.wav');
+  }
+
   void playGameEndSound({
     required bool stalemate,
     required bool playingWithAI,

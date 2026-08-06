@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
@@ -90,7 +91,42 @@ class RemoteAiService {
     }
   }
 
+  /// Offloads board evaluation/analysis to the backend.
+  Future<AnalysisResponse> analyzeFen(String fen, {int depth = 14}) async {
+    final uri = Uri.parse('$baseUrl/api/v1/analyze');
+    try {
+      final response = await _client
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'fen': fen,
+              'depth': depth,
+            }),
+          )
+          .timeout(const Duration(seconds: 3));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return AnalysisResponse.fromJson(data);
+      } else {
+        throw EngineErrorException(
+            'Server returned status ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is RemoteAiException) {
+        rethrow;
+      } else {
+        throw ApiTimeoutException('Analysis request failed: $e');
+      }
+    }
+  }
+
   /// Sends a lightweight GET request to the /health endpoint.
+
   /// Used for warming up the server during cold starts on Render.com free tier.
   Future<bool> pingServer() async {
     final uri = Uri.parse('$baseUrl/health');
@@ -118,6 +154,10 @@ String _resolveBackendUrl() {
   // ignore: do_not_use_environment
   const override = String.fromEnvironment('AI_BACKEND_URL', defaultValue: '');
   if (override.isNotEmpty) return override;
+
+  if (kIsWeb) {
+    return 'http://localhost:8000';
+  }
 
   // Standard loopback mappings per platform.
   if (Platform.isAndroid) {

@@ -4,9 +4,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../logic/audio_service.dart';
+import '../logic/chess_piece.dart';
 import '../logic/game_controller.dart';
+import '../logic/game_history_storage.dart';
+import '../logic/game_mode_notifier.dart';
 import '../logic/game_state_storage.dart';
 import '../logic/haptic_service.dart';
+import '../logic/move_calculation/move_classes/move.dart';
 import '../logic/move_calculation/move_classes/move_meta.dart';
 import '../logic/move_calculation/move_classes/move_stack_object.dart';
 import '../logic/play_games_service.dart';
@@ -14,7 +18,9 @@ import '../logic/remote_ai_service.dart';
 import '../logic/shared_functions.dart';
 import '../logic/stockfish_service.dart';
 import '../logic/timer_service.dart';
+import '../logic/tts_service.dart';
 import 'app_themes.dart';
+import 'completed_game.dart';
 import 'game_state.dart';
 import 'player.dart';
 import 'user_preferences.dart';
@@ -25,6 +31,16 @@ class AppModel extends ChangeNotifier {
   int aiDifficulty = 1;
   Player selectedSide = Player.player1;
   Player playerSide = Player.player1;
+  ChessMode gameMode = ChessMode.normal;
+  bool isAnalysisMode = false;
+  bool isTacticsMode = false;
+  bool _hasSavedGame = false;
+  bool get hasSavedGame => _hasSavedGame;
+
+  Future<void> checkSavedGame() async {
+    _hasSavedGame = await GameStateStorage.hasSavedGame();
+    notifyListeners();
+  }
 
   /// The side Player 1 chooses to start on in a 2-player game.
   Player selectedSideP1 = Player.player1;
@@ -34,6 +50,7 @@ class AppModel extends ChangeNotifier {
   final AudioService audio = AudioService();
   final TimerService timerService = TimerService();
   final HapticService haptic = HapticService();
+  final TTSService tts = TTSService();
 
   // ── Delegated Accessors (backward compatibility) ──
   int get timeLimit => timerService.timeLimit;
@@ -55,46 +72,132 @@ class AppModel extends ChangeNotifier {
   int get pieceThemeIndex => prefs.pieceThemeIndex;
   List<String> get pieceThemes => prefs.pieceThemes;
 
+  bool get ttsEnabled => prefs.ttsEnabled;
+  double get ttsSpeechRate => prefs.ttsSpeechRate;
+  double get ttsPitch => prefs.ttsPitch;
+
+  // ── Navigation ──
+  int navIndex = 0;
+  void setNavIndex(int index) {
+    navIndex = index;
+    notifyListeners();
+  }
+
+  // ── Linked Accounts (Analysis feature) ──
+  String get lichessUsername => prefs.lichessUsername;
+  String get chessComUsername => prefs.chessComUsername;
+  bool get hasLinkedAccounts =>
+      prefs.lichessUsername.isNotEmpty || prefs.chessComUsername.isNotEmpty;
+
+  Future<void> setLichessUsername(String name) async {
+    await prefs.setLichessUsername(name);
+    notifyListeners();
+  }
+
+  Future<void> setChessComUsername(String name) async {
+    await prefs.setChessComUsername(name);
+    notifyListeners();
+  }
+
+  Future<void> setTtsEnabled(bool enabled) async {
+    debugPrint('[AppModel] setTtsEnabled($enabled) called');
+    await prefs.setTtsEnabled(enabled);
+    debugPrint(
+        '[AppModel] setTtsEnabled($enabled) persisted — prefs.ttsEnabled=${prefs.ttsEnabled}');
+    notifyListeners();
+  }
+
+  Future<void> setTtsSpeechRate(double rate) async {
+    await prefs.setTtsSpeechRate(rate);
+    notifyListeners();
+  }
+
+  Future<void> setTtsPitch(double pitch) async {
+    await prefs.setTtsPitch(pitch);
+    notifyListeners();
+  }
+
+  void speak(String text) {
+    debugPrint(
+        '[AppModel] speak("$text") mode=$gameMode ttsEnabled=$ttsEnabled');
+    if (gameMode == ChessMode.blind || gameMode == ChessMode.snapshot) {
+      tts.speak(text,
+          enabled: ttsEnabled, rate: ttsSpeechRate, pitch: ttsPitch);
+    }
+  }
+
   // ── Profile / Stats Accessors ──
-  int get userRating => prefs.userRating;
+  int get userRatingNormal => prefs.userRatingNormal;
+  int get userRatingBlind => prefs.userRatingBlind;
   List<int> get beatenBots => prefs.beatenBots;
+  List<int> get beatenBotsBlind => prefs.beatenBotsBlind;
   String get userName => prefs.userName;
+
   String get userAvatar => prefs.userAvatar;
 
-  int get lastGameRatingChange => prefs.lastGameRatingChange;
-  String get lastGameDate => prefs.lastGameDate;
-  int get todayRatingChange => prefs.todayRatingChange;
-  int get lastAdjustmentTimestamp => prefs.lastAdjustmentTimestamp;
+  int get lastGameRatingChangeNormal => prefs.lastGameRatingChangeNormal;
+  int get lastGameRatingChangeBlind => prefs.lastGameRatingChangeBlind;
+  String get lastGameDateNormal => prefs.lastGameDateNormal;
+  String get lastGameDateBlind => prefs.lastGameDateBlind;
+  int get todayRatingChangeNormal => prefs.todayRatingChangeNormal;
+  int get todayRatingChangeBlind => prefs.todayRatingChangeBlind;
 
-  int get ratingAdjustmentsCount {
-    final count = prefs.ratingAdjustmentsCount;
+  // Active getters (for backward compatibility where applicable)
+  int get userRating =>
+      gameMode == ChessMode.blind || gameMode == ChessMode.snapshot
+          ? userRatingBlind
+          : userRatingNormal;
+  int get lastGameRatingChange =>
+      gameMode == ChessMode.blind || gameMode == ChessMode.snapshot
+          ? lastGameRatingChangeBlind
+          : lastGameRatingChangeNormal;
+  String get lastGameDate =>
+      gameMode == ChessMode.blind || gameMode == ChessMode.snapshot
+          ? lastGameDateBlind
+          : lastGameDateNormal;
+  int get todayRatingChange =>
+      gameMode == ChessMode.blind || gameMode == ChessMode.snapshot
+          ? todayRatingChangeBlind
+          : todayRatingChangeNormal;
+
+  int getRatingAdjustmentsCount(bool isBlind) {
+    final count = isBlind
+        ? prefs.ratingAdjustmentsCountBlind
+        : prefs.ratingAdjustmentsCountNormal;
+    final timestamp = isBlind
+        ? prefs.lastAdjustmentTimestampBlind
+        : prefs.lastAdjustmentTimestampNormal;
     if (count >= 2) {
       final now = DateTime.now().millisecondsSinceEpoch;
-      final timePassed = now - prefs.lastAdjustmentTimestamp;
+      final timePassed = now - timestamp;
       const sixtyDaysMs = 60 * 24 * 60 * 60 * 1000;
       if (timePassed >= sixtyDaysMs) {
         // Cooldown expired! Reset count.
-        prefs.resetRatingAdjustmentsCount();
+        prefs.resetRatingAdjustmentsCount(isBlind);
         return 0;
       }
     }
     return count;
   }
 
-  bool get isRatingAdjustmentLocked => ratingAdjustmentsCount >= 2;
+  bool isRatingAdjustmentLocked(bool isBlind) =>
+      getRatingAdjustmentsCount(isBlind) >= 2;
 
-  int get ratingAdjustmentCooldownDaysLeft {
-    if (ratingAdjustmentsCount < 2) return 0;
+  int getRatingAdjustmentCooldownDaysLeft(bool isBlind) {
+    if (getRatingAdjustmentsCount(isBlind) < 2) return 0;
     final now = DateTime.now().millisecondsSinceEpoch;
-    final timePassed = now - prefs.lastAdjustmentTimestamp;
+    final timestamp = isBlind
+        ? prefs.lastAdjustmentTimestampBlind
+        : prefs.lastAdjustmentTimestampNormal;
+    final timePassed = now - timestamp;
     const sixtyDaysMs = 60 * 24 * 60 * 60 * 1000;
     final remainingMs = sixtyDaysMs - timePassed;
     if (remainingMs <= 0) return 0;
     return (remainingMs / (24 * 60 * 60 * 1000)).ceil();
   }
 
-  Future<void> adjustUserRating(int rating) async {
-    await prefs.adjustUserRating(rating);
+  Future<void> adjustUserRating(int rating, bool isBlind) async {
+    await prefs.adjustUserRating(rating, isBlind);
     notifyListeners();
   }
 
@@ -242,6 +345,9 @@ class AppModel extends ChangeNotifier {
   bool? _gameOverInvertedState;
 
   bool get isBoardInverted {
+    if (historyViewIndex != null || isAnalysisMode || isTacticsMode) {
+      return playerSide == Player.player2;
+    }
     if (_gameOverInvertedState != null && gameOver) {
       return _gameOverInvertedState!;
     }
@@ -254,7 +360,12 @@ class AppModel extends ChangeNotifier {
 
   AppModel({UserPreferences? prefs}) : prefs = prefs ?? UserPreferences() {
     // Wire up service callbacks
-    this.prefs.onChanged = () => notifyListeners();
+    this.prefs.onChanged = () {
+      audio.enabled = this.prefs.soundEnabled;
+      haptic.enabled = this.prefs.hapticEnabled;
+      notifyListeners();
+    };
+    tts.init();
     timerService.onExpired = () => endGame();
     audio.enabled = this.prefs.soundEnabled;
     audio.initialize();
@@ -266,14 +377,18 @@ class AppModel extends ChangeNotifier {
 
     // Start warming up the Render cloud server in the background
     startServerWarmup();
+    checkSavedGame();
   }
 
   // ── Game Lifecycle ──
 
-  void newGame({bool notify = true}) {
+  void newGame({bool notify = true, ChessMode mode = ChessMode.normal}) {
+    gameMode = mode;
     gameController?.cancelAIMove();
     timerService.stop();
     GameStateStorage.clearGameState();
+    _hasSavedGame = false;
+
     _gameOverInvertedState = null;
     _gameState.reset(); // reset all pure-model game state in one call
     promotionRequested = false;
@@ -327,12 +442,18 @@ class AppModel extends ChangeNotifier {
     if (notify) {
       notifyListeners();
     }
+
+    if (mode == ChessMode.blind || mode == ChessMode.snapshot) {
+      speak(
+          "Game started, you are playing as ${playerSide == Player.player1 ? 'White' : 'Black'}.");
+    }
   }
 
   void exitChessView() {
     gameController?.cancelAIMove();
     timerService.stop();
     GameStateStorage.clearGameState();
+    _hasSavedGame = false;
     historyViewIndex = null;
     notifyListeners();
   }
@@ -473,6 +594,22 @@ class AppModel extends ChangeNotifier {
 
     final actualWinner = winner ?? turn;
 
+    if (gameController != null) {
+      final moves = gameController!.board.moveStack
+          .map((mso) => Move(mso.move.from, mso.move.to,
+              promotionType: mso.promotionType ?? ChessPieceType.promotion))
+          .toList();
+      GameHistoryStorage.saveGame(CompletedGame(
+        date: DateTime.now(),
+        winner: actualWinner,
+        stalemate: stalemate,
+        aiDifficulty: aiDifficulty,
+        moves: moves,
+        playerCount: playerCount,
+        playerSide: playerSide,
+      ));
+    }
+
     userWon = audio.didUserWin(
       playingWithAI: playingWithAI,
       playerSide: playerSide,
@@ -503,7 +640,10 @@ class AppModel extends ChangeNotifier {
       // Map difficulty levels to approximate ELO ratings.
       const botElos = {1: 400, 2: 800, 3: 1200, 4: 1600, 5: 2000};
       final botElo = botElos[aiDifficulty] ?? 1200;
-      final currentRating = prefs.userRating;
+      final isBlind =
+          gameMode == ChessMode.blind || gameMode == ChessMode.snapshot;
+      final currentRating =
+          isBlind ? prefs.userRatingBlind : prefs.userRatingNormal;
 
       // Standard Elo expected score.
       final expected =
@@ -514,15 +654,20 @@ class AppModel extends ChangeNotifier {
       final newRating =
           (currentRating + 32 * (score - expected)).round().clamp(100, 3200);
 
-      prefs.setUserRating(newRating);
+      prefs.setUserRating(newRating, isBlind);
 
       // Track beaten bots.
       if (userWon && !stalemate) {
-        prefs.addBeatenBot(aiDifficulty);
+        if (isBlind) {
+          prefs.addBeatenBotBlind(aiDifficulty);
+        } else {
+          prefs.addBeatenBot(aiDifficulty);
+        }
       }
     }
 
     GameStateStorage.clearGameState();
+    _hasSavedGame = false;
     if (!silent) notifyListeners();
   }
 
@@ -689,10 +834,14 @@ class AppModel extends ChangeNotifier {
   /// Rapid undo/redo or move bursts collapse into a single write,
   /// preventing SharedPreferences I/O on every single event.
   void saveGameState() {
+    _hasSavedGame = true;
     _saveDebounceTimer?.cancel();
     _saveDebounceTimer = Timer(
       const Duration(milliseconds: 400),
-      () => GameStateStorage.saveGameState(this),
+      () {
+        GameStateStorage.saveGameState(this);
+        notifyListeners();
+      },
     );
   }
 
@@ -700,9 +849,11 @@ class AppModel extends ChangeNotifier {
   /// Use this in lifecycle events (app pause, explicit exit) to ensure
   /// no data is lost.
   void saveGameStateImmediate() {
+    _hasSavedGame = true;
     _saveDebounceTimer?.cancel();
     _saveDebounceTimer = null;
     GameStateStorage.saveGameState(this);
+    notifyListeners();
   }
 
   Future<void> restoreGameState() async {
@@ -727,11 +878,27 @@ class AppModel extends ChangeNotifier {
     historyRedoStack.clear();
     _historyAnimationTimer?.cancel();
 
+    // Restore gameMode
+    final savedModeStr = state['gameMode'] as String?;
+    if (savedModeStr != null) {
+      gameMode = ChessMode.values.firstWhere((e) => e.name == savedModeStr,
+          orElse: () => ChessMode.normal);
+    } else {
+      gameMode = ChessMode.normal;
+    }
+
     // Create a fresh game and replay all moves
     gameController?.dispose();
     gameController = GameController(this);
+
+    final savedSnapshotMoveCount = state['snapshotMoveCount'] as int?;
+    if (gameMode == ChessMode.snapshot) {
+      gameController!.snapshotMoveCount = savedSnapshotMoveCount;
+    }
+
     final moves = GameStateStorage.parseMoves(state);
-    for (var move in moves) {
+    for (int i = 0; i < moves.length; i++) {
+      var move = moves[i];
       var meta = gameController!.board
           .push(move, getMeta: true, promotionType: move.promotionType);
       moveMetaList.add(meta);
@@ -786,12 +953,60 @@ class AppModel extends ChangeNotifier {
     });
   }
 
+  void loadCompletedGame(CompletedGame game) {
+    gameController?.cancelAIMove();
+    timerService.stop();
+
+    playerCount = game.playerCount;
+    aiDifficulty = game.aiDifficulty;
+    playerSide = game.playerSide;
+    selectedSide = game.playerSide;
+    gameOver = true;
+    stalemate = game.stalemate;
+    turn = Player.player1;
+    moveMetaList = [];
+    historyViewIndex = null;
+    historyRedoStack.clear();
+    _historyAnimationTimer?.cancel();
+
+    gameController?.dispose();
+    gameController = GameController(this);
+
+    for (var move in game.moves) {
+      var meta = gameController!.board
+          .push(move, getMeta: true, promotionType: move.promotionType);
+      moveMetaList.add(meta);
+      turn = oppositePlayer(turn);
+    }
+    gameController!.snapSprites();
+
+    _availableUndos = 0;
+
+    if (moveMetaList.isNotEmpty) {
+      gameController!.latestMove = moveMetaList.last.move;
+      if (gameController!.board.kingInCheck(turn)) {
+        gameController!.checkHintTile =
+            gameController!.board.kingForPlayer(turn)?.tile;
+      }
+    }
+
+    moveListUpdated = true;
+    historyViewIndex = moveMetaList.length > 0 ? moveMetaList.length - 1 : 0;
+
+    animateBoardRotation = false;
+    Future.delayed(Duration(milliseconds: 50), () {
+      animateBoardRotation = true;
+      notifyListeners();
+    });
+  }
+
   @override
   void dispose() {
     _warmUpTimer?.cancel();
     _pingPollTimer?.cancel();
     gameController?.dispose();
     StockfishService.instance.dispose();
+    tts.stop();
     super.dispose();
   }
 }

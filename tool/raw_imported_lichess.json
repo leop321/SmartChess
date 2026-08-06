@@ -1,0 +1,58 @@
+[
+  {
+    "id": "lichess_00008",
+    "fen": "r6k/pp2r2p/4Rp1Q/3p4/8/1N1P2b1/PqP3PP/7K w - - 0 25",
+    "mode": "antiTactics",
+    "antiTacticsType": "winningTacticExists",
+    "expectedMoves": [
+      "e6e7",
+      "b2b1",
+      "b3c1",
+      "b1c1",
+      "h6c1"
+    ],
+    "difficulty": 1925,
+    "tags": [
+      "hangingPiece"
+    ],
+    "phase": "middlegame",
+    "explanationShort": "Gewinnbringende Taktik gefunden",
+    "explanation": "Lichess Puzzle 00008. Finde die beste Zugfolge für Weiß."
+  },
+  {
+    "id": "lichess_0000D",
+    "fen": "5rk1/1p3ppp/pq1Q1b2/8/8/1P3N2/P4PPP/3R2K1 b - - 3 27",
+    "mode": "antiTactics",
+    "antiTacticsType": "winningTacticExists",
+    "expectedMoves": [
+      "f8d8",
+      "d6d8",
+      "f6d8"
+    ],
+    "difficulty": 1518,
+    "tags": [
+      "advantage"
+    ],
+    "phase": "endgame",
+    "explanationShort": "Gewinnbringende Taktik gefunden",
+    "explanation": "Lichess Puzzle 0000D. Finde die beste Zugfolge für Schwarz."
+  },
+  {
+    "id": "lichess_0009B",
+    "fen": "r2qr1k1/b1p2ppp/p5n1/P1p1p3/4P1n1/B2P2Pb/3NBP1P/RN1QR1K1 w - - 0 17",
+    "mode": "antiTactics",
+    "antiTacticsType": "winningTacticExists",
+    "expectedMoves": [
+      "e2g4",
+      "h3g4",
+      "d1g4"
+    ],
+    "difficulty": 1172,
+    "tags": [
+      "advantage"
+    ],
+    "phase": "middlegame",
+    "explanationShort": "Gewinnbringende Taktik gefunden",
+    "explanation": "Lichess Puzzle 0009B. Finde die beste Zugfolge für Weiß."
+  }
+]

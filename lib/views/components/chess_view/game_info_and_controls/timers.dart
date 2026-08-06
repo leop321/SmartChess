@@ -11,8 +11,6 @@ class Timers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (appModel.timeLimit == 0) return const SizedBox.shrink();
-
     final theme = appModel.theme;
     final turn = appModel.turn;
 
@@ -21,12 +19,38 @@ class Timers extends StatelessWidget {
     final isP2Active = turn == Player.player2;
 
     // Label logic (P1 is White, P2 is Black)
+    final aiEngineName = appModel.aiEngine == 'maya' ? 'MAYA' : 'STOCKFISH';
     final p1Label = appModel.playingWithAI
-        ? (appModel.playerSide == Player.player1 ? 'YOU' : 'AI')
+        ? (appModel.playerSide == Player.player1 ? 'YOU' : aiEngineName)
         : 'WHITE';
     final p2Label = appModel.playingWithAI
-        ? (appModel.playerSide == Player.player2 ? 'YOU' : 'AI')
+        ? (appModel.playerSide == Player.player2 ? 'YOU' : aiEngineName)
         : 'BLACK';
+
+    if (appModel.timeLimit == 0) {
+      if (!appModel.playingWithAI) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.smart_toy_rounded,
+                size: 16, color: theme.lightTile.withValues(alpha: 0.5)),
+            const SizedBox(width: 6),
+            Text(
+              'PLAYING $aiEngineName',
+              style: TextStyle(
+                color: theme.lightTile.withValues(alpha: 0.5),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Column(
       children: [

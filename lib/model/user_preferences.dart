@@ -35,19 +35,35 @@ class UserPreferences {
   String aiEngine = 'stockfish';
   int timerIncrement = 0;
   String timerMode = 'increment';
+  bool ttsEnabled = false;
+  double ttsSpeechRate = 0.5;
+  double ttsPitch = 1.0;
+
+  // ── Linked Accounts (Analysis feature) ──
+  String lichessUsername = '';
+  String chessComUsername = '';
 
   // ── Profile / Stats ──
-  int userRating = 1200;
+  int userRatingNormal = 1200;
+  int userRatingBlind = 1200;
   List<int> beatenBots = [];
+  List<int> beatenBotsBlind = [];
   String userName = 'Player';
   String userAvatar = 'king_white';
 
-  // ── Rating Change & Adjustment Cooldown Tracking ──
-  int lastGameRatingChange = 0;
-  String lastGameDate = '';
-  int todayRatingChange = 0;
-  int ratingAdjustmentsCount = 0;
-  int lastAdjustmentTimestamp = 0;
+  // ── Rating Change & Adjustment Cooldown Tracking (Normal) ──
+  int lastGameRatingChangeNormal = 0;
+  String lastGameDateNormal = '';
+  int todayRatingChangeNormal = 0;
+  int ratingAdjustmentsCountNormal = 0;
+  int lastAdjustmentTimestampNormal = 0;
+
+  // ── Rating Change & Adjustment Cooldown Tracking (Blind) ──
+  int lastGameRatingChangeBlind = 0;
+  String lastGameDateBlind = '';
+  int todayRatingChangeBlind = 0;
+  int ratingAdjustmentsCountBlind = 0;
+  int lastAdjustmentTimestampBlind = 0;
 
   List<String> get pieceThemes => sortedPieceThemes;
 
@@ -84,17 +100,50 @@ class UserPreferences {
     _prefs!.setString('aiEngine', 'stockfish');
     timerIncrement = _prefs!.getInt('timerIncrement') ?? 0;
     timerMode = _prefs!.getString('timerMode') ?? 'increment';
-    userRating = _prefs!.getInt('userRating') ?? 1200;
+    ttsEnabled = _prefs!.getBool('ttsEnabled') ?? false;
+    ttsSpeechRate = _prefs!.getDouble('ttsSpeechRate') ?? 0.5;
+    ttsPitch = _prefs!.getDouble('ttsPitch') ?? 1.0;
+    lichessUsername = _prefs!.getString('lichessUsername') ?? '';
+    chessComUsername = _prefs!.getString('chessComUsername') ?? '';
+    userRatingNormal = _prefs!.getInt('userRatingNormal') ??
+        _prefs!.getInt('userRating') ??
+        1200;
+    userRatingBlind = _prefs!.getInt('userRatingBlind') ?? 1200;
     beatenBots =
         (_prefs!.getStringList('beatenBots') ?? []).map(int.parse).toList();
+    beatenBotsBlind = (_prefs!.getStringList('beatenBotsBlind') ?? [])
+        .map(int.parse)
+        .toList();
     userName = _prefs!.getString('userName') ?? 'Player';
+
     userAvatar = _prefs!.getString('userAvatar') ?? 'king_white';
 
-    lastGameRatingChange = _prefs!.getInt('lastGameRatingChange') ?? 0;
-    lastGameDate = _prefs!.getString('lastGameDate') ?? '';
-    todayRatingChange = _prefs!.getInt('todayRatingChange') ?? 0;
-    ratingAdjustmentsCount = _prefs!.getInt('ratingAdjustmentsCount') ?? 0;
-    lastAdjustmentTimestamp = _prefs!.getInt('lastAdjustmentTimestamp') ?? 0;
+    lastGameRatingChangeNormal = _prefs!.getInt('lastGameRatingChangeNormal') ??
+        _prefs!.getInt('lastGameRatingChange') ??
+        0;
+    lastGameDateNormal = _prefs!.getString('lastGameDateNormal') ??
+        _prefs!.getString('lastGameDate') ??
+        '';
+    todayRatingChangeNormal = _prefs!.getInt('todayRatingChangeNormal') ??
+        _prefs!.getInt('todayRatingChange') ??
+        0;
+    ratingAdjustmentsCountNormal =
+        _prefs!.getInt('ratingAdjustmentsCountNormal') ??
+            _prefs!.getInt('ratingAdjustmentsCount') ??
+            0;
+    lastAdjustmentTimestampNormal =
+        _prefs!.getInt('lastAdjustmentTimestampNormal') ??
+            _prefs!.getInt('lastAdjustmentTimestamp') ??
+            0;
+
+    lastGameRatingChangeBlind =
+        _prefs!.getInt('lastGameRatingChangeBlind') ?? 0;
+    lastGameDateBlind = _prefs!.getString('lastGameDateBlind') ?? '';
+    todayRatingChangeBlind = _prefs!.getInt('todayRatingChangeBlind') ?? 0;
+    ratingAdjustmentsCountBlind =
+        _prefs!.getInt('ratingAdjustmentsCountBlind') ?? 0;
+    lastAdjustmentTimestampBlind =
+        _prefs!.getInt('lastAdjustmentTimestampBlind') ?? 0;
 
     onChanged?.call();
   }
@@ -183,51 +232,86 @@ class UserPreferences {
     onChanged?.call();
   }
 
-  Future<void> setUserRating(int rating) async {
-    final oldRating = userRating;
-    userRating = rating;
+  Future<void> setUserRating(int rating, bool isBlind) async {
+    _prefs ??= await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final todayStr =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
-    final change = rating - oldRating;
-    if (change != 0) {
-      final now = DateTime.now();
-      final todayStr =
-          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-
-      lastGameRatingChange = change;
-      if (lastGameDate == todayStr) {
-        todayRatingChange += change;
-      } else {
-        todayRatingChange = change;
-        lastGameDate = todayStr;
+    if (isBlind) {
+      final oldRating = userRatingBlind;
+      userRatingBlind = rating;
+      final change = rating - oldRating;
+      if (change != 0) {
+        lastGameRatingChangeBlind = change;
+        if (lastGameDateBlind == todayStr) {
+          todayRatingChangeBlind += change;
+        } else {
+          todayRatingChangeBlind = change;
+          lastGameDateBlind = todayStr;
+        }
+        await _prefs!
+            .setInt('lastGameRatingChangeBlind', lastGameRatingChangeBlind);
+        await _prefs!.setString('lastGameDateBlind', lastGameDateBlind);
+        await _prefs!.setInt('todayRatingChangeBlind', todayRatingChangeBlind);
       }
-
-      _prefs ??= await SharedPreferences.getInstance();
-      await _prefs!.setInt('lastGameRatingChange', lastGameRatingChange);
-      await _prefs!.setString('lastGameDate', lastGameDate);
-      await _prefs!.setInt('todayRatingChange', todayRatingChange);
+      await _prefs!.setInt('userRatingBlind', rating);
+    } else {
+      final oldRating = userRatingNormal;
+      userRatingNormal = rating;
+      final change = rating - oldRating;
+      if (change != 0) {
+        lastGameRatingChangeNormal = change;
+        if (lastGameDateNormal == todayStr) {
+          todayRatingChangeNormal += change;
+        } else {
+          todayRatingChangeNormal = change;
+          lastGameDateNormal = todayStr;
+        }
+        await _prefs!
+            .setInt('lastGameRatingChangeNormal', lastGameRatingChangeNormal);
+        await _prefs!.setString('lastGameDateNormal', lastGameDateNormal);
+        await _prefs!
+            .setInt('todayRatingChangeNormal', todayRatingChangeNormal);
+      }
+      await _prefs!.setInt('userRatingNormal', rating);
     }
-
-    _prefs ??= await SharedPreferences.getInstance();
-    await _prefs!.setInt('userRating', rating);
     onChanged?.call();
   }
 
-  Future<void> adjustUserRating(int rating) async {
-    userRating = rating;
-    ratingAdjustmentsCount++;
-    lastAdjustmentTimestamp = DateTime.now().millisecondsSinceEpoch;
-
+  Future<void> adjustUserRating(int rating, bool isBlind) async {
     _prefs ??= await SharedPreferences.getInstance();
-    await _prefs!.setInt('userRating', rating);
-    await _prefs!.setInt('ratingAdjustmentsCount', ratingAdjustmentsCount);
-    await _prefs!.setInt('lastAdjustmentTimestamp', lastAdjustmentTimestamp);
+    if (isBlind) {
+      userRatingBlind = rating;
+      ratingAdjustmentsCountBlind++;
+      lastAdjustmentTimestampBlind = DateTime.now().millisecondsSinceEpoch;
+      await _prefs!.setInt('userRatingBlind', rating);
+      await _prefs!
+          .setInt('ratingAdjustmentsCountBlind', ratingAdjustmentsCountBlind);
+      await _prefs!
+          .setInt('lastAdjustmentTimestampBlind', lastAdjustmentTimestampBlind);
+    } else {
+      userRatingNormal = rating;
+      ratingAdjustmentsCountNormal++;
+      lastAdjustmentTimestampNormal = DateTime.now().millisecondsSinceEpoch;
+      await _prefs!.setInt('userRatingNormal', rating);
+      await _prefs!
+          .setInt('ratingAdjustmentsCountNormal', ratingAdjustmentsCountNormal);
+      await _prefs!.setInt(
+          'lastAdjustmentTimestampNormal', lastAdjustmentTimestampNormal);
+    }
     onChanged?.call();
   }
 
-  Future<void> resetRatingAdjustmentsCount() async {
-    ratingAdjustmentsCount = 0;
+  Future<void> resetRatingAdjustmentsCount(bool isBlind) async {
     _prefs ??= await SharedPreferences.getInstance();
-    await _prefs!.setInt('ratingAdjustmentsCount', 0);
+    if (isBlind) {
+      ratingAdjustmentsCountBlind = 0;
+      await _prefs!.setInt('ratingAdjustmentsCountBlind', 0);
+    } else {
+      ratingAdjustmentsCountNormal = 0;
+      await _prefs!.setInt('ratingAdjustmentsCountNormal', 0);
+    }
     onChanged?.call();
   }
 
@@ -241,23 +325,51 @@ class UserPreferences {
     }
   }
 
+  Future<void> addBeatenBotBlind(int difficulty) async {
+    if (!beatenBotsBlind.contains(difficulty)) {
+      beatenBotsBlind = List<int>.from(beatenBotsBlind)..add(difficulty);
+      _prefs ??= await SharedPreferences.getInstance();
+      await _prefs!.setStringList(
+          'beatenBotsBlind', beatenBotsBlind.map((e) => e.toString()).toList());
+      onChanged?.call();
+    }
+  }
+
   Future<void> resetStats() async {
-    userRating = 1200;
+    userRatingNormal = 1200;
+    userRatingBlind = 1200;
     beatenBots = [];
-    lastGameRatingChange = 0;
-    lastGameDate = '';
-    todayRatingChange = 0;
-    ratingAdjustmentsCount = 0;
-    lastAdjustmentTimestamp = 0;
+    beatenBotsBlind = [];
+    lastGameRatingChangeNormal = 0;
+
+    lastGameDateNormal = '';
+    todayRatingChangeNormal = 0;
+    ratingAdjustmentsCountNormal = 0;
+    lastAdjustmentTimestampNormal = 0;
+
+    lastGameRatingChangeBlind = 0;
+    lastGameDateBlind = '';
+    todayRatingChangeBlind = 0;
+    ratingAdjustmentsCountBlind = 0;
+    lastAdjustmentTimestampBlind = 0;
 
     _prefs ??= await SharedPreferences.getInstance();
-    await _prefs!.setInt('userRating', userRating);
+    await _prefs!.setInt('userRatingNormal', userRatingNormal);
+    await _prefs!.setInt('userRatingBlind', userRatingBlind);
     await _prefs!.setStringList('beatenBots', []);
-    await _prefs!.setInt('lastGameRatingChange', 0);
-    await _prefs!.setString('lastGameDate', '');
-    await _prefs!.setInt('todayRatingChange', 0);
-    await _prefs!.setInt('ratingAdjustmentsCount', 0);
-    await _prefs!.setInt('lastAdjustmentTimestamp', 0);
+    await _prefs!.setStringList('beatenBotsBlind', []);
+
+    await _prefs!.setInt('lastGameRatingChangeNormal', 0);
+    await _prefs!.setString('lastGameDateNormal', '');
+    await _prefs!.setInt('todayRatingChangeNormal', 0);
+    await _prefs!.setInt('ratingAdjustmentsCountNormal', 0);
+    await _prefs!.setInt('lastAdjustmentTimestampNormal', 0);
+
+    await _prefs!.setInt('lastGameRatingChangeBlind', 0);
+    await _prefs!.setString('lastGameDateBlind', '');
+    await _prefs!.setInt('todayRatingChangeBlind', 0);
+    await _prefs!.setInt('ratingAdjustmentsCountBlind', 0);
+    await _prefs!.setInt('lastAdjustmentTimestampBlind', 0);
     onChanged?.call();
   }
 
@@ -275,6 +387,41 @@ class UserPreferences {
     onChanged?.call();
   }
 
+  Future<void> setLichessUsername(String name) async {
+    lichessUsername = name.trim();
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString('lichessUsername', lichessUsername);
+    onChanged?.call();
+  }
+
+  Future<void> setChessComUsername(String name) async {
+    chessComUsername = name.trim();
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString('chessComUsername', chessComUsername);
+    onChanged?.call();
+  }
+
+  Future<void> setTtsEnabled(bool enabled) async {
+    ttsEnabled = enabled;
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setBool('ttsEnabled', enabled);
+    onChanged?.call();
+  }
+
+  Future<void> setTtsSpeechRate(double rate) async {
+    ttsSpeechRate = rate;
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setDouble('ttsSpeechRate', rate);
+    onChanged?.call();
+  }
+
+  Future<void> setTtsPitch(double pitch) async {
+    ttsPitch = pitch;
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setDouble('ttsPitch', pitch);
+    onChanged?.call();
+  }
+
   Future<void> resetToDefaults() async {
     themeName = 'Forest Mint';
     pieceTheme = 'Classic';
@@ -289,6 +436,9 @@ class UserPreferences {
     aiEngine = 'stockfish';
     timerIncrement = 0;
     timerMode = 'increment';
+    ttsEnabled = false;
+    ttsSpeechRate = 0.5;
+    ttsPitch = 1.0;
 
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.setString('themeName', themeName);
@@ -304,6 +454,9 @@ class UserPreferences {
     await _prefs!.setString('aiEngine', aiEngine);
     await _prefs!.setInt('timerIncrement', timerIncrement);
     await _prefs!.setString('timerMode', timerMode);
+    await _prefs!.setBool('ttsEnabled', ttsEnabled);
+    await _prefs!.setDouble('ttsSpeechRate', ttsSpeechRate);
+    await _prefs!.setDouble('ttsPitch', ttsPitch);
     // Note: profile stats (rating, beatenBots, userName, userAvatar) are NOT
     // reset by this method — only via resetStats().
     onChanged?.call();

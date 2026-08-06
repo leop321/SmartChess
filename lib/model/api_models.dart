@@ -46,3 +46,27 @@ class MoveResponse {
     );
   }
 }
+
+class AnalysisResponse {
+  final double bestEval;
+  final bool isMate;
+  final List<String> suggestions;
+  final List<double> alternatives;
+
+  AnalysisResponse({
+    required this.bestEval,
+    required this.isMate,
+    required this.suggestions,
+    required this.alternatives,
+  });
+
+  factory AnalysisResponse.fromJson(Map<String, dynamic> json) {
+    return AnalysisResponse(
+      bestEval: (json['best_eval'] as num).toDouble(),
+      isMate: json['is_mate'] as bool,
+      suggestions: List<String>.from(json['suggestions'] as List? ?? []),
+      alternatives: List<double>.from((json['alternatives'] as List? ?? [])
+          .map((e) => (e as num).toDouble())),
+    );
+  }
+}

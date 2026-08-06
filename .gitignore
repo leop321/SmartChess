@@ -33,13 +33,15 @@
 **/build/
 
 # Web related
-lib/generated_plugin_registrant.dart
 
 # Symbolication related
 app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+# Firebase
+.firebase/
 
 # Screenshots Editor
 /screenshots_editor/node_modules/

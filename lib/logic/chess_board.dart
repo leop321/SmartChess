@@ -118,6 +118,174 @@ class ChessBoard {
     inEndGameCached = _computeInEndGame();
   }
 
+  /// Reconstructs the board state from a standard FEN string.
+  /// Returns the Player whose turn it is.
+  Player loadFEN(String fen) {
+    tiles.fillRange(0, 64, null);
+    player1Pieces.clear();
+    player2Pieces.clear();
+    player1Rooks.clear();
+    player2Rooks.clear();
+    player1Queens.clear();
+    player2Queens.clear();
+    player1King = null;
+    player2King = null;
+    enPassantPiece = null;
+    moveStack.clear();
+    redoStack.clear();
+    player1KingInCheck = false;
+    player2KingInCheck = false;
+
+    final parts = fen.split(' ');
+    final placement = parts[0];
+
+    int rank = 0; // 0 is 8th rank
+    int file = 0;
+    int idCounter = 0;
+
+    for (int i = 0; i < placement.length; i++) {
+      String c = placement[i];
+      if (c == '/') {
+        rank++;
+        file = 0;
+      } else if (int.tryParse(c) != null) {
+        file += int.parse(c);
+      } else {
+        int tile = rank * 8 + file;
+        Player player = c == c.toLowerCase() ? Player.player2 : Player.player1;
+        ChessPieceType type;
+        switch (c.toLowerCase()) {
+          case 'p':
+            type = ChessPieceType.pawn;
+            break;
+          case 'r':
+            type = ChessPieceType.rook;
+            break;
+          case 'n':
+            type = ChessPieceType.knight;
+            break;
+          case 'b':
+            type = ChessPieceType.bishop;
+            break;
+          case 'q':
+            type = ChessPieceType.queen;
+            break;
+          case 'k':
+            type = ChessPieceType.king;
+            break;
+          default:
+            type = ChessPieceType.pawn;
+        }
+
+        final piece = ChessPiece(idCounter++, type, player, tile);
+
+        // Setup initial move counts for rooks and kings to handle castling later
+        if (type == ChessPieceType.king || type == ChessPieceType.rook) {
+          piece.moveCount = 1; // Assume moved by default
+        }
+
+        _setTile(tile, piece);
+        piecesForPlayer(player).add(piece);
+
+        if (type == ChessPieceType.king) {
+          if (player == Player.player1) {
+            player1King = piece;
+          } else {
+            player2King = piece;
+          }
+        } else if (type == ChessPieceType.rook) {
+          rooksForPlayer(player).add(piece);
+        } else if (type == ChessPieceType.queen) {
+          queensForPlayer(player).add(piece);
+        }
+
+        file++;
+      }
+    }
+
+    // Handle Castling rights (parts[2])
+    if (parts.length > 2) {
+      String castling = parts[2];
+      if (castling.contains('K')) {
+        // White King-side
+        if (player1King != null) player1King!.moveCount = 0;
+        final h1Rook = tiles[63];
+        if (h1Rook != null &&
+            h1Rook.type == ChessPieceType.rook &&
+            h1Rook.player == Player.player1) {
+          h1Rook.moveCount = 0;
+        }
+      }
+      if (castling.contains('Q')) {
+        // White Queen-side
+        if (player1King != null) player1King!.moveCount = 0;
+        final a1Rook = tiles[56];
+        if (a1Rook != null &&
+            a1Rook.type == ChessPieceType.rook &&
+            a1Rook.player == Player.player1) {
+          a1Rook.moveCount = 0;
+        }
+      }
+      if (castling.contains('k')) {
+        // Black King-side
+        if (player2King != null) player2King!.moveCount = 0;
+        final h8Rook = tiles[7];
+        if (h8Rook != null &&
+            h8Rook.type == ChessPieceType.rook &&
+            h8Rook.player == Player.player2) {
+          h8Rook.moveCount = 0;
+        }
+      }
+      if (castling.contains('q')) {
+        // Black Queen-side
+        if (player2King != null) player2King!.moveCount = 0;
+        final a8Rook = tiles[0];
+        if (a8Rook != null &&
+            a8Rook.type == ChessPieceType.rook &&
+            a8Rook.player == Player.player2) {
+          a8Rook.moveCount = 0;
+        }
+      }
+    }
+
+    // Handle en-passant (parts[3])
+    if (parts.length > 3 && parts[3] != '-') {
+      String ep = parts[3];
+      int epFile = ep.codeUnitAt(0) - 97; // 'a' is 97
+      int epRank = 8 - int.parse(ep[1]);
+
+      int pawnRank = epRank == 5 ? 4 : (epRank == 2 ? 3 : -1);
+      if (pawnRank != -1) {
+        int pawnTile = pawnRank * 8 + epFile;
+        enPassantPiece = tiles[pawnTile];
+      }
+    }
+
+    // Update move count
+    if (parts.length > 5) {
+      moveCount = (int.tryParse(parts[5]) ?? 1) * 2;
+      if (parts.length > 1 && parts[1] == 'w') {
+        moveCount -= 2;
+      } else {
+        moveCount -= 1;
+      }
+      if (moveCount < 0) moveCount = 0;
+    }
+
+    _initZobristHash();
+    _initIncrementalValue();
+
+    Player turn = Player.player1;
+    if (parts.length > 1 && parts[1] == 'b') {
+      turn = Player.player2;
+    }
+
+    player1KingInCheck = kingInCheck(Player.player1);
+    player2KingInCheck = kingInCheck(Player.player2);
+
+    return turn;
+  }
+
   bool _computeInEndGame() {
     return (player1Queens.isEmpty && player2Queens.isEmpty) ||
         player1Pieces.length <= 3 ||
@@ -174,12 +342,28 @@ class ChessBoard {
   MoveMeta push(Move move,
       {bool getMeta = false,
       ChessPieceType promotionType = ChessPieceType.promotion}) {
-    var mso =
-        MoveStackObject(move, tiles[move.from], tiles[move.to], enPassantPiece);
+    var piece = tiles[move.from];
+    var adjustedMove = move;
+    if (piece != null && piece.type == ChessPieceType.king) {
+      final fromRow = tileToRow(move.from);
+      final fromCol = tileToCol(move.from);
+      final toRow = tileToRow(move.to);
+      final toCol = tileToCol(move.to);
+      if (fromRow == toRow && fromCol == 4) {
+        if (toCol == 6) {
+          adjustedMove = Move(move.from, fromRow * 8 + 7);
+        } else if (toCol == 2 || toCol == 1) {
+          adjustedMove = Move(move.from, fromRow * 8 + 0);
+        }
+      }
+    }
+    var mso = MoveStackObject(adjustedMove, tiles[adjustedMove.from],
+        tiles[adjustedMove.to], enPassantPiece);
     mso.previousHash = zobristHash;
     mso.previousBoardValue = incrementalValue;
     mso.previousInEndGame = inEndGameCached;
-    var meta = MoveMeta(move, mso.movedPiece?.player, mso.movedPiece?.type);
+    var meta =
+        MoveMeta(adjustedMove, mso.movedPiece?.player, mso.movedPiece?.type);
     if (getMeta) {
       _checkMoveAmbiguity(move, meta);
     }
@@ -502,6 +686,7 @@ class ChessBoard {
       _removePiece(takenPiece);
       _setTile(takenPiece.tile, null);
       mso.enPassant = true;
+      meta.took = true;
     }
   }
 
@@ -515,7 +700,9 @@ class ChessBoard {
     var firstTile = pawn.tile + offset;
     if (tiles[firstTile] == null) {
       moves.add(firstTile);
-      if (pawn.moveCount == 0) {
+      final isStartingRank =
+          tileToRow(pawn.tile) == (pawn.player == Player.player1 ? 6 : 1);
+      if (pawn.moveCount == 0 && isStartingRank) {
         var secondTile = firstTile + offset;
         if (tiles[secondTile] == null) {
           moves.add(secondTile);
@@ -593,6 +780,14 @@ class ChessBoard {
       for (var rook in rooksForPlayer(king.player)) {
         if (_canCastle(king, rook, legal)) {
           moves.add(rook.tile);
+          final rookCol = tileToCol(rook.tile);
+          final row = tileToRow(king.tile);
+          if (rookCol == 7) {
+            moves.add(row * 8 + 6);
+          } else if (rookCol == 0) {
+            moves.add(row * 8 + 2);
+            moves.add(row * 8 + 1);
+          }
         }
       }
     }

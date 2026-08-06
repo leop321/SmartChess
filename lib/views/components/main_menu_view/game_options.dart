@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../logic/game_mode_notifier.dart';
 import '../../../model/app_model.dart';
 import '../shared/glass_panel.dart';
 import 'game_options/ai_difficulty_picker.dart';
+import 'game_options/chess_mode_picker.dart';
 import 'game_options/game_mode_picker.dart';
+import 'game_options/peek_frequency_picker.dart';
 import 'game_options/side_picker.dart';
 import 'game_options/time_limit_picker.dart';
 import 'game_options/timer_increment_picker.dart';
 import 'game_options/timer_mode_picker.dart';
+import 'recent_games_history.dart';
 
-class GameOptions extends StatelessWidget {
+class GameOptions extends ConsumerWidget {
   final AppModel appModel;
   final bool hasSavedGame;
   final ScrollController? scrollController;
@@ -23,8 +28,9 @@ class GameOptions extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final safeAreaBottom = MediaQuery.of(context).padding.bottom;
+    final selectedMode = ref.watch(gameModeProvider);
 
     final buttonsHeight = hasSavedGame ? (54 + 12 + 54) : 54;
     final bottomPaddingVal = safeAreaBottom > 0 ? safeAreaBottom : 20.0;
@@ -73,6 +79,16 @@ class GameOptions extends StatelessWidget {
               ],
             ),
           ),
+        GlassPanel(
+          child: const ChessModePicker(),
+        ),
+        const SizedBox(height: 16),
+        if (selectedMode != ChessMode.normal) ...[
+          GlassPanel(
+            child: const PeekFrequencyPicker(),
+          ),
+          const SizedBox(height: 16),
+        ],
         GlassPanel(
           child: GameModePicker(
             appModel.playerCount,
@@ -158,6 +174,8 @@ class GameOptions extends StatelessWidget {
             ),
           ],
         ],
+        const SizedBox(height: 16),
+        const RecentGamesHistory(),
         const SizedBox(height: 20),
       ],
     );
