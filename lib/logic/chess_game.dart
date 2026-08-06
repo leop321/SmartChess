@@ -275,6 +275,9 @@ class ChessGame extends FlameGame with TapCallbacks {
 
     _rebuildPieceCache();
 
+    // Purge stale sprites for pieces no longer on the board
+    spriteMap.removeWhere((piece, _) => !_allPieces.contains(piece));
+
     // Create sprites for any new pieces that were added (e.g. from loadFEN)
     for (var piece in _allPieces) {
       if (!spriteMap.containsKey(piece)) {

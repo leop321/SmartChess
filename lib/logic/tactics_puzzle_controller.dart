@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:chess/chess.dart' as ch;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../model/anti_tactics_storage.dart';
 import '../model/app_model.dart';
@@ -13,6 +14,7 @@ import 'game_controller.dart';
 import 'move_calculation/move_classes/move.dart';
 import 'puzzle_providers/tactics_task_provider.dart';
 import 'puzzle_rush_storage.dart';
+import 'simple_tactics_queue.dart';
 import 'tactics_judge.dart';
 
 enum PuzzleStatus {
@@ -28,32 +30,50 @@ enum PuzzleStatus {
 }
 
 /// ChangeNotifier that manages the full lifecycle of a tactics puzzle session.
-///
-/// Responsibilities:
-///   - Fetching puzzles from Lichess
-///   - Tracking board state (via the `chess` package for FEN/move logic)
-///   - Validating player moves against the solution
-///   - Managing back/forward history navigation
-///   - Elo rating calculation (tactics-specific)
-///   - Session history (list of [PuzzleRecord])
-class TacticsPuzzleController extends ChangeNotifier {
+class TacticsPuzzleController extends ChangeNotifier
+    with WidgetsBindingObserver {
   static const int _kFactor = 20;
   static const int _maxHistoryDisplay = 30;
 
   final AppModel appModel;
   final TacticsMode mode;
-  final TacticsTaskProvider _provider;
+  final TacticsTaskProvider? _provider;
   final TacticsJudge _judge;
+  final SimpleTacticsQueue _queue = SimpleTacticsQueue();
 
   TacticsPuzzleController(
     this.appModel, {
     this.mode = TacticsMode.classic,
-    required TacticsTaskProvider provider,
-    required TacticsJudge judge,
+    TacticsTaskProvider? provider,
+    TacticsJudge? judge,
   })  : _provider = provider,
-        _judge = judge {
+        _judge = judge ??
+            ((mode == TacticsMode.antiTactics ||
+                    mode == TacticsMode.antiTacticsV2)
+                ? AntiTacticsJudge()
+                : ClassicTacticsJudge()) {
+    WidgetsBinding.instance.addObserver(this);
     _loadPersistedData();
     _startSessionTimer();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _queue.persist(mode);
+      TacticsStorage.saveRating(_rating, mode: mode.name);
+      TacticsStorage.saveHistory(_history, mode: mode.name);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    _sessionTimer?.cancel();
+    super.dispose();
   }
 
   GameController? gameController;
@@ -178,8 +198,13 @@ class TacticsPuzzleController extends ChangeNotifier {
       await AntiTacticsStorage.instance.init();
     }
 
-    notifyListeners();
-    fetchNextPuzzle();
+    if (_provider != null) {
+      notifyListeners();
+      fetchNextPuzzle();
+    } else {
+      await _queue.restore(mode);
+      _loadTaskFromQueue(_queue.current);
+    }
   }
 
   AntiTacticsStats? get antiTacticsStats =>
@@ -189,7 +214,7 @@ class TacticsPuzzleController extends ChangeNotifier {
 
   // ── Puzzle Fetching ────────────────────────────────────────────────────────
 
-  /// Fetches a new random puzzle and resets all session state.
+  /// Advances to the next puzzle from the offline 3-puzzle queue and resets all session state.
   Future<void> fetchNextPuzzle() async {
     _status = PuzzleStatus.loading;
     _task = null;
@@ -209,22 +234,40 @@ class TacticsPuzzleController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final task = await _provider.fetchNextTask();
-      _task = task;
-      _board = ch.Chess.fromFEN(task.fen);
-      _initialPlayerColor = _board!.turn;
-      _fenHistory.add(_board!.fen); // snapshot[0] = initial position
-
-      if (gameController != null) {
-        gameController!.loadFEN(task.fen);
+      TacticsTask? task;
+      if (_provider != null) {
+        task = await _provider!.fetchNextTask();
+      } else {
+        task = await _queue.advance(mode);
       }
 
-      _status = PuzzleStatus.idle;
-      _startTimer();
+      if (task != null) {
+        _loadTaskFromQueue(task);
+      } else {
+        _status = PuzzleStatus.error;
+        _errorMessage = 'Keine Aufgaben verfügbar';
+      }
     } catch (e) {
       _errorMessage = e.toString();
       _status = PuzzleStatus.error;
     }
+    notifyListeners();
+  }
+
+  void _loadTaskFromQueue(TacticsTask? task) {
+    if (task == null) return;
+    _task = task;
+    _board = ch.Chess.fromFEN(task.fen);
+    _initialPlayerColor = _board!.turn;
+    _fenHistory.clear();
+    _fenHistory.add(_board!.fen); // snapshot[0] = initial position
+
+    if (gameController != null) {
+      gameController!.loadFEN(task.fen);
+    }
+
+    _status = PuzzleStatus.idle;
+    _startTimer();
     notifyListeners();
   }
 

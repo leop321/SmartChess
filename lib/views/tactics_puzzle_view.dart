@@ -65,26 +65,11 @@ class _TacticsPuzzleViewState extends State<TacticsPuzzleView> {
     // Bind Flame game
     _chessGame = ChessGame(_puzzleGameController, _puzzleAppModel);
 
-    final provider = widget.provider ??
-        (widget.mode == TacticsMode.antiTacticsV2
-            ? UnifiedTacticsSessionManager()
-            : widget.mode == TacticsMode.antiTactics
-                ? AssetAntiTacticsProvider(targetMode: widget.mode)
-                // RatingAwareClassicProvider seeds from the local asset and
-                // fetches more from the Lichess API in the background, always
-                // serving the puzzle closest to the player's current rating.
-                : RatingAwareClassicProvider());
-
-    final judge = widget.judge ??
-        (widget.mode == TacticsMode.antiTactics ||
-                widget.mode == TacticsMode.antiTacticsV2
-            ? AntiTacticsJudge()
-            : ClassicTacticsJudge());
-
     _controller = TacticsPuzzleController(
       globalAppModel, // Uses global model for haptics/sounds
-      provider: provider,
-      judge: judge,
+      mode: widget.mode,
+      provider: widget.provider,
+      judge: widget.judge,
     );
 
     _controller.gameController = _puzzleGameController;
