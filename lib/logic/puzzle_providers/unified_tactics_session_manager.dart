@@ -3,7 +3,7 @@ import 'dart:math';
 
 import '../../model/tactics_task.dart';
 import 'lichess_anti_tactics_v2_provider.dart';
-import 'lichess_classic_provider.dart';
+import 'rating_aware_classic_provider.dart';
 import 'tactics_task_provider.dart';
 
 /// Manages a continuous tactics session combining normal tactics and anti-tactics.
@@ -14,7 +14,7 @@ import 'tactics_task_provider.dart';
 /// 3. From Task 4 onwards: Interleaves normal tactics (70%) and anti-tactics (30%) with randomized spacing.
 /// 4. Enforces a 40-50% target for Black-to-move positions.
 class UnifiedTacticsSessionManager implements TacticsTaskProvider {
-  final LichessClassicProvider _classicProvider;
+  final TacticsTaskProvider _classicProvider;
   final LichessAntiTacticsV2Provider _antiV2Provider;
 
   int _taskIndex = 0;
@@ -22,9 +22,9 @@ class UnifiedTacticsSessionManager implements TacticsTaskProvider {
   bool _isAntiPoolWarmedUp = false;
 
   UnifiedTacticsSessionManager({
-    LichessClassicProvider? classicProvider,
+    TacticsTaskProvider? classicProvider,
     LichessAntiTacticsV2Provider? antiV2Provider,
-  })  : _classicProvider = classicProvider ?? LichessClassicProvider(),
+  })  : _classicProvider = classicProvider ?? RatingAwareClassicProvider(),
         _antiV2Provider = antiV2Provider ?? LichessAntiTacticsV2Provider();
 
   void _warmUpAntiPoolInBackground() {
