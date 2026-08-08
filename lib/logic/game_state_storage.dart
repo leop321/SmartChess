@@ -27,6 +27,10 @@ const String _snapshotMoveCountKey = 'snapshotMoveCount';
 class GameStateStorage {
   static SharedPreferences? _prefs;
 
+  static void resetForTesting() {
+    _prefs = null;
+  }
+
   static Future<SharedPreferences> _getPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;

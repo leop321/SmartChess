@@ -326,6 +326,11 @@ class _MoveListState extends State<MoveList> {
           : '';
       ambiguity +=
           meta.colIsAmbiguous ? '${8 - tileToRow(meta.move?.from ?? 0)}' : '';
+      if ((meta.type == ChessPieceType.pawn || meta.type == null) &&
+          meta.took &&
+          ambiguity.isEmpty) {
+        ambiguity = '${_colToChar(tileToCol(meta.move?.from ?? 0))}';
+      }
       String takeString = meta.took ? 'x' : '';
       String promotion = meta.promotion
           ? '=${_pieceToChar(meta.promotionType ?? ChessPieceType.promotion)}'

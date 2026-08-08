@@ -293,24 +293,41 @@ class TacticsPuzzleController extends ChangeNotifier
       return false;
     }
 
-    final fromSq = _tileToAlgebraic(move.from);
-    final toSq = _tileToAlgebraic(move.to);
+    String fromSq;
+    String toSq;
     String? promoChar;
 
-    if (move.promotionType == ChessPieceType.queen)
-      promoChar = 'q';
-    else if (move.promotionType == ChessPieceType.rook)
-      promoChar = 'r';
-    else if (move.promotionType == ChessPieceType.bishop)
-      promoChar = 'b';
-    else if (move.promotionType == ChessPieceType.knight) promoChar = 'n';
+    if (move.from == 60 && move.to == 63) {
+      fromSq = 'e1';
+      toSq = 'g1';
+    } else if (move.from == 60 && move.to == 56) {
+      fromSq = 'e1';
+      toSq = 'c1';
+    } else if (move.from == 4 && move.to == 7) {
+      fromSq = 'e8';
+      toSq = 'g8';
+    } else if (move.from == 4 && move.to == 0) {
+      fromSq = 'e8';
+      toSq = 'c8';
+    } else {
+      fromSq = _tileToAlgebraic(move.from);
+      toSq = _tileToAlgebraic(move.to);
 
-    // Promotion-Erkennung für MVP: Wenn ein Bauer die letzte Reihe betritt,
-    // gehen wir vereinfacht von einer Queen-Promotion aus.
-    final piece = _board!.get(fromSq);
-    if (piece != null && piece.type == ch.PieceType.PAWN) {
-      if (toSq.endsWith('8') || toSq.endsWith('1')) {
-        promoChar ??= 'q';
+      if (move.promotionType == ChessPieceType.queen)
+        promoChar = 'q';
+      else if (move.promotionType == ChessPieceType.rook)
+        promoChar = 'r';
+      else if (move.promotionType == ChessPieceType.bishop)
+        promoChar = 'b';
+      else if (move.promotionType == ChessPieceType.knight) promoChar = 'n';
+
+      // Promotion-Erkennung für MVP: Wenn ein Bauer die letzte Reihe betritt,
+      // gehen wir vereinfacht von einer Queen-Promotion aus.
+      final piece = _board!.get(fromSq);
+      if (piece != null && piece.type == ch.PieceType.PAWN) {
+        if (toSq.endsWith('8') || toSq.endsWith('1')) {
+          promoChar ??= 'q';
+        }
       }
     }
 
@@ -409,20 +426,31 @@ class TacticsPuzzleController extends ChangeNotifier
     _applyMove(oppFrom, oppTo, promoChar);
 
     if (gameController != null) {
-      int fromFile = oppFrom.codeUnitAt(0) - 97;
-      int fromRank = 8 - int.parse(oppFrom[1]);
-      int toFile = oppTo.codeUnitAt(0) - 97;
-      int toRank = 8 - int.parse(oppTo[1]);
-      Move oppMove = Move(fromRank * 8 + fromFile, toRank * 8 + toFile);
-      if (promoChar != null) {
-        if (promoChar == 'q')
-          oppMove.promotionType = ChessPieceType.queen;
-        else if (promoChar == 'r')
-          oppMove.promotionType = ChessPieceType.rook;
-        else if (promoChar == 'b')
-          oppMove.promotionType = ChessPieceType.bishop;
-        else if (promoChar == 'n')
-          oppMove.promotionType = ChessPieceType.knight;
+      Move oppMove;
+      if (oppUci == 'e1g1') {
+        oppMove = Move(60, 63);
+      } else if (oppUci == 'e1c1') {
+        oppMove = Move(60, 56);
+      } else if (oppUci == 'e8g8') {
+        oppMove = Move(4, 7);
+      } else if (oppUci == 'e8c8') {
+        oppMove = Move(4, 0);
+      } else {
+        int fromFile = oppFrom.codeUnitAt(0) - 97;
+        int fromRank = 8 - int.parse(oppFrom[1]);
+        int toFile = oppTo.codeUnitAt(0) - 97;
+        int toRank = 8 - int.parse(oppTo[1]);
+        oppMove = Move(fromRank * 8 + fromFile, toRank * 8 + toFile);
+        if (promoChar != null) {
+          if (promoChar == 'q')
+            oppMove.promotionType = ChessPieceType.queen;
+          else if (promoChar == 'r')
+            oppMove.promotionType = ChessPieceType.rook;
+          else if (promoChar == 'b')
+            oppMove.promotionType = ChessPieceType.bishop;
+          else if (promoChar == 'n')
+            oppMove.promotionType = ChessPieceType.knight;
+        }
       }
       gameController!.executeOpponentMove(oppMove);
     } else {

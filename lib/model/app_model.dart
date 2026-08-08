@@ -640,9 +640,8 @@ class AppModel extends ChangeNotifier {
 
     // ── Elo rating update (AI games only) ──
     if (playingWithAI) {
-      // Map difficulty levels to approximate ELO ratings.
-      const botElos = {1: 400, 2: 800, 3: 1200, 4: 1600, 5: 2000};
-      final botElo = botElos[aiDifficulty] ?? 1200;
+      // Map difficulty level (or custom ELO) to ELO rating.
+      final botElo = getDifficultyElo(aiDifficulty);
       final isBlind =
           gameMode == ChessMode.blind || gameMode == ChessMode.snapshot;
       final currentRating =
@@ -711,6 +710,8 @@ class AppModel extends ChangeNotifier {
   }
 
   static int getDifficultyElo(int level) {
+    // If value > 5, it is already a direct ELO (custom difficulty).
+    if (level > 5) return level;
     switch (level) {
       case 1:
         return 400;

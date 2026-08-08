@@ -1,4 +1,5 @@
 import 'package:en_passant/logic/game_controller.dart';
+import 'package:en_passant/logic/game_state_storage.dart';
 import 'package:en_passant/model/app_model.dart';
 import 'package:en_passant/model/player.dart';
 import 'package:en_passant/model/user_preferences.dart';
@@ -9,6 +10,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
+    GameStateStorage.resetForTesting();
     SharedPreferences.setMockInitialValues({});
   });
 
@@ -43,9 +45,7 @@ void main() {
     });
 
     test('king check highlight restored on game resume', () async {
-      final prefs = UserPreferences();
-      await prefs.load();
-
+      GameStateStorage.resetForTesting();
       // Set up mocked shared preferences containing a game state in check
       SharedPreferences.setMockInitialValues({
         'chess_game_state': true,
@@ -70,6 +70,8 @@ void main() {
         ], // Fool's Mate sequence placing White (Player.player1) in check
       });
 
+      final prefs = UserPreferences();
+      await prefs.load();
       final appModel = AppModel(prefs: prefs);
       await appModel.restoreGameState();
 

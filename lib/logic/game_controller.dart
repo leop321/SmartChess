@@ -665,7 +665,9 @@ class GameController {
     final action = meta.took ? 'takes' : 'to';
     if (pieceName == 'Pawn') {
       if (meta.took) {
-        text = 'Pawn takes ${toSq.toUpperCase()}';
+        final fromCol = meta.move?.from != null ? meta.move!.from % 8 : 0;
+        final fromF = String.fromCharCode('a'.codeUnitAt(0) + fromCol);
+        text = '$fromF takes ${toSq.toUpperCase()}';
       } else {
         text = 'Pawn to ${toSq.toUpperCase()}';
       }

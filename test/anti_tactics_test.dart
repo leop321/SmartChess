@@ -208,6 +208,7 @@ void main() {
       controller.handleAction(TacticsAction.declareNoTactic);
 
       expect(controller.status, PuzzleStatus.solved);
+      controller.dispose();
     });
   });
 }

@@ -59,15 +59,11 @@ class _ChessViewState extends State<ChessView> with WidgetsBindingObserver {
       if (widget.isResuming) {
         appModel.restoreGameState().then((_) {
           _initFlameGame();
-          if (appModel.gameMode == ChessMode.blind ||
-              appModel.gameMode == ChessMode.snapshot) {
+          if (appModel.gameMode == ChessMode.blind) {
             appModel.gameController?.isResumingPeek = true;
             providerContainer
                 .read(peekingProvider.notifier)
                 .triggerResumePeek();
-            if (appModel.gameMode == ChessMode.snapshot) {
-              appModel.gameController?.startSnapshotPeek();
-            }
           }
         });
       } else {
@@ -233,7 +229,7 @@ class _ChessViewState extends State<ChessView> with WidgetsBindingObserver {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              '${appModel.aiEngine == 'maya' ? 'Maya' : 'Stockfish'} L${appModel.aiDifficulty}',
+                                              '${appModel.aiEngine == 'maya' ? 'Maya' : 'Stockfish'}',
                                               style: TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
@@ -244,7 +240,7 @@ class _ChessViewState extends State<ChessView> with WidgetsBindingObserver {
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              '(${AppModel.getDifficultyElo(appModel.aiDifficulty)} ELO)',
+                                              '${AppModel.getDifficultyElo(appModel.aiDifficulty)} ELO',
                                               style: TextStyle(
                                                 fontSize: 9,
                                                 fontWeight: FontWeight.w500,

@@ -65,7 +65,7 @@ class LichessPuzzle {
   });
 
   factory LichessPuzzle.fromJson(Map<String, dynamic> json) {
-    final puzzle = json['puzzle'] as Map<String, dynamic>;
+    final puzzle = json['puzzle'] as Map<String, dynamic>? ?? json;
     final game = json['game'] as Map<String, dynamic>?;
 
     String rawFen = '';
@@ -79,34 +79,34 @@ class LichessPuzzle {
       lastMove = puzzle['lastMove'] as String?;
       pgnStr = json['pgn'] as String? ?? game?['pgn'] as String?;
     }
-    // 2. Replay game PGN up to initialPly (the opponent's setup move)
+    // 2. Replay game PGN using robust load_pgn up to initialPly
     else if (game != null && game['pgn'] != null) {
       pgnStr = game['pgn'] as String;
       final initialPly = puzzle['initialPly'] as int?;
-      final pgnMoves =
-          pgnStr.split(RegExp(r'\s+')).where((m) => m.isNotEmpty).toList();
       final board = ch.Chess();
+      final loaded = board.load_pgn(pgnStr);
 
-      final limit = (initialPly != null && initialPly < pgnMoves.length)
-          ? initialPly + 1
-          : pgnMoves.length;
-
-      for (int i = 0; i < limit; i++) {
-        board.move(pgnMoves[i]);
-      }
-      rawFen = board.fen;
-
-      if (limit > 0) {
-        final last = board.undo();
-        if (last != null) {
-          final from = last['from'] as String?;
-          final to = last['to'] as String?;
-          final promo = last['promotion'] as String?;
-          if (from != null && to != null) {
-            lastMove = '$from$to${promo ?? ''}';
+      if (loaded) {
+        if (initialPly != null) {
+          final targetPly = initialPly + 1;
+          while (board.history.length > targetPly && board.history.isNotEmpty) {
+            board.undo();
           }
-          board.move(last);
-          rawFen = board.fen;
+        }
+        rawFen = board.fen;
+
+        if (board.history.isNotEmpty) {
+          final last = board.undo();
+          if (last != null) {
+            final from = last['from'] as String?;
+            final to = last['to'] as String?;
+            final promo = last['promotion'] as String?;
+            if (from != null && to != null) {
+              lastMove = '$from$to${promo ?? ''}';
+            }
+            board.move(last);
+            rawFen = board.fen;
+          }
         }
       }
     } else {
@@ -131,6 +131,30 @@ class LichessPuzzle {
       lastMove: lastMove,
       pgn: pgnStr,
     );
+  }
+
+  /// Validates that the FEN is legal and all solution moves can be executed legally in sequence.
+  bool get isValidPuzzle {
+    if (fen.isEmpty || solution.isEmpty) return false;
+    try {
+      final board = ch.Chess.fromFEN(fen);
+      if (board.fen.isEmpty) return false;
+      for (final uci in solution) {
+        if (uci.length < 4) return false;
+        final from = uci.substring(0, 2);
+        final to = uci.substring(2, 4);
+        final promo = uci.length > 4 ? uci.substring(4) : null;
+        final moveArgs = <String, String>{'from': from, 'to': to};
+        if (promo != null) moveArgs['promotion'] = promo;
+        final ok = board.move(moveArgs);
+        if (!ok) {
+          return false;
+        }
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
 

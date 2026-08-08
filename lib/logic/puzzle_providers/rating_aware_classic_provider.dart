@@ -74,6 +74,7 @@ class RatingAwareClassicProvider implements TacticsTaskProvider {
   }
 
   void _addToPool(LichessPuzzle puzzle) {
+    if (!puzzle.isValidPuzzle) return;
     if (_pool.length >= _kMaxPoolSize) return;
     // Avoid duplicates.
     if (_pool.any((e) => e.puzzle.id == puzzle.id)) return;

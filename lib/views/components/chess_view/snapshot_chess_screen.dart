@@ -14,8 +14,8 @@ import '../../../logic/shared_functions.dart';
 import '../../../model/app_model.dart';
 import '../../../model/app_themes.dart';
 import '../../../model/player.dart';
-import '../../chess_view.dart';
 import 'game_info_and_controls/timer_widget.dart';
+import 'game_over_overlay.dart';
 
 /// Snapshot Chess mode screen.
 ///
@@ -124,40 +124,7 @@ class _SnapshotChessScreenState extends State<SnapshotChessScreen>
 
   double _lerp(double a, double b, double t) => a + (b - a) * t;
 
-  String _moveToLongString(MoveMeta meta) {
-    if (meta.kingCastle) return 'Castle King-side';
-    if (meta.queenCastle) return 'Castle Queen-side';
-
-    String pieceName = '';
-    switch (meta.type) {
-      case ChessPieceType.king:
-        pieceName = 'King';
-        break;
-      case ChessPieceType.queen:
-        pieceName = 'Queen';
-        break;
-      case ChessPieceType.rook:
-        pieceName = 'Rook';
-        break;
-      case ChessPieceType.bishop:
-        pieceName = 'Bishop';
-        break;
-      case ChessPieceType.knight:
-        pieceName = 'Knight';
-        break;
-      case ChessPieceType.pawn:
-        pieceName = '';
-        break;
-      default:
-        break;
-    }
-
-    final toSq = _tileToSquare(meta.move?.to ?? 0);
-    if (pieceName.isEmpty) {
-      return toSq.toUpperCase();
-    }
-    return '$pieceName ${toSq.toUpperCase()}';
-  }
+  String _moveToLongString(MoveMeta meta) => meta.toLongString();
 
   // ── State machine helpers ────────────────────────────────────────────────
 
@@ -547,8 +514,11 @@ class _SnapshotChessScreenState extends State<SnapshotChessScreen>
                             aspectRatio: 1.0,
                             child: IgnorePointer(
                               ignoring: true,
-                              child: GameWidget(
-                                game: widget.chessGame,
+                              child: RotatedBox(
+                                quarterTurns: appModel.isBoardInverted ? 2 : 0,
+                                child: GameWidget(
+                                  game: widget.chessGame,
+                                ),
                               ),
                             ),
                           ),
@@ -786,9 +756,9 @@ class _SnapshotChessScreenState extends State<SnapshotChessScreen>
                               appModel.haptic.light();
                               final ok = ref
                                   .read(peekingProvider.notifier)
-                                  .consumeTokenForPeek(appModel.turn);
+                                  .consumeTokenForUpdate(appModel.turn);
                               if (ok) {
-                                widget.controller.startSnapshotPeek();
+                                widget.controller.updateBoard();
                               }
                             },
                           ),
@@ -799,20 +769,10 @@ class _SnapshotChessScreenState extends State<SnapshotChessScreen>
                 ),
               ),
             ),
-            if (peekState.showBoardOverride)
-              Positioned(
-                left: 16,
-                right: 16,
-                top: 100,
-                child: PeekCountdownOverlay(
-                  hasGameTimer: hasTimer,
-                  isResume: widget.controller.isResumingPeek,
-                  onClose: () {
-                    widget.controller.isResumingPeek = false;
-                    ref.read(peekingProvider.notifier).resetPeekOverride();
-                    widget.controller.stopSnapshotPeek();
-                  },
-                ),
+            if (appModel.gameOver)
+              GameOverOverlay(
+                appModel: appModel,
+                onReviewGame: () {},
               ),
           ],
         );

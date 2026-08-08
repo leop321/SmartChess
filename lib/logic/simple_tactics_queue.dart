@@ -122,17 +122,19 @@ class SimpleTacticsQueue {
                 'lastMove': entry['lastMove'] as String?,
               },
             });
-            pool.add(TacticsTask(
-              id: puzzle.id,
-              fen: puzzle.fen,
-              mode: TacticsMode.classic,
-              expectedMoves: puzzle.solution,
-              difficulty: puzzle.rating,
-              displayRating: puzzle.rating,
-              searchRating: puzzle.rating,
-              lastMove: puzzle.lastMove,
-              themes: puzzle.themes,
-            ));
+            if (puzzle.isValidPuzzle) {
+              pool.add(TacticsTask(
+                id: puzzle.id,
+                fen: puzzle.fen,
+                mode: TacticsMode.classic,
+                expectedMoves: puzzle.solution,
+                difficulty: puzzle.rating,
+                displayRating: puzzle.rating,
+                searchRating: puzzle.rating,
+                lastMove: puzzle.lastMove,
+                themes: puzzle.themes,
+              ));
+            }
           }
         } catch (_) {}
       }

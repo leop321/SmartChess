@@ -69,8 +69,9 @@ class _RecentGamesHistoryState extends State<RecentGamesHistory> {
         ),
         ..._history!.map((game) {
           final isAI = game.playerCount == 1;
-          String title =
-              isAI ? 'vs AI (Level ${game.aiDifficulty})' : '2 Player Match';
+          String title = isAI
+              ? 'vs AI (${AppModel.getDifficultyElo(game.aiDifficulty)} ELO)'
+              : '2 Player Match';
 
           String outcome;
           Color outcomeColor;
