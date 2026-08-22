@@ -1,5 +1,5 @@
-import '../chess_piece.dart';
 import '../chess_board.dart';
+import '../chess_piece.dart';
 import '../move_calculation/move_classes/move.dart';
 
 /// Konvertiert einen UCI-String (z.B. "e2e4" oder "e7e8q") in ein [Move]-Objekt.

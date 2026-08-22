@@ -121,7 +121,7 @@ void main() {
 
   setUp(() {
     repo = FakePuzzleRepository();
-    state = PuzzleSessionState();
+    state = PuzzleSessionState(repository: repo);
   });
 
   tearDown(() {
@@ -135,7 +135,7 @@ void main() {
 
   test('loadNextPuzzle wechselt zu showingOpponentMove dann waitingForPlayerMove',
       () async {
-    state.loadNextPuzzle(repo);
+    state.loadNextPuzzle();
     await waitForStatus(state, PuzzleStatus.showingOpponentMove);
     expect(state.currentPuzzle, isNotNull);
     await waitForStatus(state, PuzzleStatus.waitingForPlayerMove);
@@ -146,7 +146,7 @@ void main() {
 
   test('Falscher Zug → status incorrect, Board-Zustand identisch nach Undo',
       () async {
-    state.loadNextPuzzle(repo);
+    state.loadNextPuzzle();
     final puzzle = await waitForPuzzleLoaded(state);
 
     // Snapshot vor dem Fehlzug
@@ -173,7 +173,7 @@ void main() {
 
   test('Fake-Puzzle 1: korrekter Vollablauf (laden → Gegnerzug → Player → solved)',
       () async {
-    state.loadNextPuzzle(repo);
+    state.loadNextPuzzle();
     final puzzle = await waitForPuzzleLoaded(state);
     await playThroughPuzzle(state, puzzle);
     expect(state.status, PuzzleStatus.solved);
@@ -183,7 +183,7 @@ void main() {
     // Erstes Puzzle überspringen (Repo rotiert)
     await _skipPuzzle(repo);
     // Zweites Puzzle laden
-    state.loadNextPuzzle(repo);
+    state.loadNextPuzzle();
     final puzzle = await waitForPuzzleLoaded(state);
     await playThroughPuzzle(state, puzzle);
     expect(state.status, PuzzleStatus.solved);
@@ -194,20 +194,20 @@ void main() {
     await _skipPuzzle(repo);
     await _skipPuzzle(repo);
     // Drittes Puzzle laden
-    state.loadNextPuzzle(repo);
+    state.loadNextPuzzle();
     final puzzle = await waitForPuzzleLoaded(state);
     await playThroughPuzzle(state, puzzle);
     expect(state.status, PuzzleStatus.solved);
   });
 
   test('Nach solved: loadNextPuzzle startet neues Puzzle', () async {
-    state.loadNextPuzzle(repo);
+    state.loadNextPuzzle();
     final puzzle = await waitForPuzzleLoaded(state);
     await playThroughPuzzle(state, puzzle);
     expect(state.status, PuzzleStatus.solved);
 
     // Neues Puzzle
-    state.loadNextPuzzle(repo);
+    state.loadNextPuzzle();
     await waitForStatus(state, PuzzleStatus.waitingForPlayerMove);
     expect(state.status, PuzzleStatus.waitingForPlayerMove);
     // Ist ein anderes (oder rotiertes) Puzzle
@@ -217,8 +217,8 @@ void main() {
 
 /// Hilfsfunktion: Lädt ein Puzzle und verwirft es.
 Future<void> _skipPuzzle(FakePuzzleRepository repo) async {
-  final skipState = PuzzleSessionState();
-  skipState.loadNextPuzzle(repo);
+  final skipState = PuzzleSessionState(repository: repo);
+  skipState.loadNextPuzzle();
   await waitForStatus(skipState, PuzzleStatus.waitingForPlayerMove);
   skipState.dispose();
 }

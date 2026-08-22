@@ -2,6 +2,28 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../model/puzzle.dart';
 
+class PuzzleNetworkException implements Exception {
+  final String message;
+  PuzzleNetworkException(this.message);
+  @override
+  String toString() => 'PuzzleNetworkException: $message';
+}
+
+class PuzzleServerException implements Exception {
+  final int statusCode;
+  final String message;
+  PuzzleServerException(this.statusCode, this.message);
+  @override
+  String toString() => 'PuzzleServerException: $statusCode $message';
+}
+
+class PuzzleParseException implements Exception {
+  final String message;
+  PuzzleParseException(this.message);
+  @override
+  String toString() => 'PuzzleParseException: $message';
+}
+
 /// Client zum Abrufen von Puzzles über die offizielle Lichess API.
 class LichessPuzzleClient {
   static const String baseUrl = 'https://lichess.org/api/puzzle';
@@ -25,31 +47,31 @@ class LichessPuzzleClient {
       final response = await _client.get(Uri.parse(url)).timeout(
         const Duration(seconds: 8),
         onTimeout: () {
-          throw Exception('Netzwerk-Timeout beim Abrufen des Puzzles.');
+          throw PuzzleNetworkException('Timeout beim Abrufen des Puzzles.');
         },
       );
 
       if (response.statusCode >= 400) {
-        throw Exception(
-            'HTTP-Fehler ${response.statusCode} beim Abrufen von $url');
+        throw PuzzleServerException(
+            response.statusCode, 'HTTP-Fehler beim Abrufen von $url');
       }
 
       final Map<String, dynamic> json;
       try {
         json = jsonDecode(response.body);
       } catch (e) {
-        throw FormatException('Ungültiges JSON von Lichess erhalten: $e');
+        throw PuzzleParseException('Ungültiges JSON von Lichess erhalten: $e');
       }
 
       return Puzzle.fromLichessJson(json);
-    } on FormatException {
-      rethrow; // Parse-Fehler nach oben durchreichen
+    } on PuzzleNetworkException {
+      rethrow;
+    } on PuzzleServerException {
+      rethrow;
+    } on PuzzleParseException {
+      rethrow;
     } catch (e) {
-      if (e is Exception && e.toString().contains('HTTP-Fehler') ||
-          e.toString().contains('Timeout')) {
-        rethrow;
-      }
-      throw Exception('Netzwerkfehler: $e');
+      throw PuzzleNetworkException('Netzwerkfehler: $e');
     }
   }
 }

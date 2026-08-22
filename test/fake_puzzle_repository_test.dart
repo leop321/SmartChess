@@ -1,8 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:en_passant/logic/chess_board.dart';
 import 'package:en_passant/logic/puzzle/fake_puzzle_repository.dart';
 import 'package:en_passant/logic/puzzle/puzzle_repository.dart';
 import 'package:en_passant/logic/puzzle/uci_move_converter.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('FakePuzzleRepository Tests', () {

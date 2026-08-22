@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:en_passant/logic/chess_board.dart';
-import 'package:en_passant/model/puzzle.dart';
 import 'package:en_passant/logic/puzzle/uci_move_converter.dart';
+import 'package:en_passant/model/puzzle.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   final file = File('test/fixtures/lichess_puzzles_sample.json');

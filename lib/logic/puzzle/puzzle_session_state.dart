@@ -8,48 +8,30 @@ import '../../logic/move_calculation/move_classes/move.dart';
 import '../../logic/puzzle/uci_move_converter.dart';
 import '../../model/player.dart';
 import '../../model/puzzle.dart';
+import 'lichess_puzzle_client.dart';
+import 'lichess_puzzle_repository.dart';
 import 'puzzle_repository.dart';
 
 /// Status des aktuellen Puzzle-Durchgangs.
 enum PuzzleStatus {
-  /// Puzzle wird über das Repository geladen.
   loading,
-
-  /// Der automatische Gegnerzug (solutionMoves[0]) wird gerade ausgeführt.
   showingOpponentMove,
-
-  /// Der Spieler darf seinen Zug machen.
   waitingForPlayerMove,
-
-  /// Letzter Spielerzug war korrekt – kurzes positives Feedback vor dem
-  /// automatischen Gegenantwort-Zug des Gegners.
   correct,
-
-  /// Letzter Spielerzug war falsch – Zug wird zurückgenommen, Brett bleibt
-  /// unverändert. Der Spieler darf erneut versuchen.
   incorrect,
-
-  /// Alle Züge der Lösung wurden korrekt ausgeführt. Puzzle gelöst.
   solved,
-
-  /// Fehler beim Laden (z.B. Repository wirft Exception).
+  errorNetwork,
+  errorServer,
+  errorParse,
   error,
 }
 
-/// Selbstständiger State für eine Puzzle-Sitzung.
-///
-/// **Architektur-Entscheidung (dokumentiert):**
-/// Dieser State nutzt [ChessBoard] direkt, ohne [GameController] oder
-/// [AppModel]. Der Grund: [GameController] erfordert ein [AppModel] als
-/// Pflichtparameter und ist fest mit dessen Services (Audio, Haptic, Timer,
-/// TTS, AI, Save/Load) verdrahtet. [AppModel] hat im Konstruktor Seiteneffekte
-/// (Server-Warmup-Netzwerkanfrage, SharedPreferences-Load, Audio-Init), die
-/// bei einer zweiten Instanz unerwünscht wären. [ChessBoard] hingegen ist eine
-/// reine Dart-Klasse ohne Flutter/Flame-Abhängigkeiten und bietet alle
-/// benötigten Operationen: `loadFEN`, `push`, `pop`, `movesForPiece`.
 class PuzzleSessionState extends ChangeNotifier {
-  /// Das reine Schachbrett – pure Dart, keine Flutter/Flame-Abhängigkeiten.
   final ChessBoard board = ChessBoard();
+  final PuzzleRepository repository;
+
+  PuzzleSessionState({PuzzleRepository? repository})
+      : repository = repository ?? LichessPuzzleRepository();
 
   Puzzle? _currentPuzzle;
   Puzzle? get currentPuzzle => _currentPuzzle;
@@ -57,30 +39,13 @@ class PuzzleSessionState extends ChangeNotifier {
   PuzzleStatus _status = PuzzleStatus.loading;
   PuzzleStatus get status => _status;
 
-  /// Aktueller Zug-Index in [Puzzle.solutionMoves].
-  /// Index 0 = Gegnerzug (wird automatisch ausgeführt).
-  /// Index 1 = erster Spielerzug, Index 3 = zweiter Spielerzug, usw.
   int _moveIndex = 0;
-
-  /// Welche Felder sind gültige Züge für die aktuell ausgewählte Figur.
   List<int> validMovesForSelected = [];
-
-  /// Aktuell ausgewählte Figur (für Highlighting).
   ChessPiece? selectedPiece;
-
-  /// Letzter ausgeführter Zug (für Highlighting).
   Move? latestMove;
-
-  /// Fehlerzug-Highlighting: von-Feld.
   int? incorrectFromTile;
-
-  /// Fehlerzug-Highlighting: zu-Feld.
   int? incorrectToTile;
-
-  /// Fehlermeldung beim Laden.
   String? errorMessage;
-
-  // ── Internal ──
 
   bool _disposed = false;
   Timer? _delayTimer;
@@ -92,20 +57,25 @@ class PuzzleSessionState extends ChangeNotifier {
     super.dispose();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Public API
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /// Lädt das nächste Puzzle vom [repository] und startet den Ablauf.
-  Future<void> loadNextPuzzle(PuzzleRepository repository) async {
+  Future<void> loadNextPuzzle() async {
     _setStatus(PuzzleStatus.loading);
     _reset();
     try {
       final puzzle = await repository.getNextPuzzle();
+      if (_disposed) return;
       _currentPuzzle = puzzle;
       board.loadFEN(puzzle.fen);
       _moveIndex = 0;
       _scheduleOpponentMove();
+    } on PuzzleNetworkException catch (e) {
+      errorMessage = e.message;
+      _setStatus(PuzzleStatus.errorNetwork);
+    } on PuzzleServerException catch (e) {
+      errorMessage = e.message;
+      _setStatus(PuzzleStatus.errorServer);
+    } on PuzzleParseException catch (e) {
+      errorMessage = e.message;
+      _setStatus(PuzzleStatus.errorParse);
     } catch (e) {
       errorMessage = e.toString();
       _setStatus(PuzzleStatus.error);
