@@ -57,7 +57,11 @@ class PuzzleSessionState extends ChangeNotifier {
     super.dispose();
   }
 
+  bool _isLoading = false;
+
   Future<void> loadNextPuzzle() async {
+    if (_isLoading) return; // Cooldown / Re-Entrancy Check
+    _isLoading = true;
     _setStatus(PuzzleStatus.loading);
     _reset();
     try {
@@ -79,6 +83,8 @@ class PuzzleSessionState extends ChangeNotifier {
     } catch (e) {
       errorMessage = e.toString();
       _setStatus(PuzzleStatus.error);
+    } finally {
+      _isLoading = false;
     }
   }
 
