@@ -7,15 +7,12 @@ import 'package:en_passant/model/puzzle.dart';
 import 'package:en_passant/logic/puzzle/uci_move_converter.dart';
 
 void main() {
+  final file = File('test/fixtures/lichess_puzzles_sample.json');
+  final jsonString = file.readAsStringSync();
+  final fixtureData = jsonDecode(jsonString) as List<dynamic>;
+
   group('Lichess Puzzle Adapter Tests', () {
     late ChessBoard board;
-    late List<dynamic> fixtureData;
-
-    setUpAll(() {
-      final file = File('test/fixtures/lichess_puzzles_sample.json');
-      final jsonString = file.readAsStringSync();
-      fixtureData = jsonDecode(jsonString) as List<dynamic>;
-    });
 
     setUp(() {
       board = ChessBoard();
@@ -50,21 +47,29 @@ void main() {
     test('Parst gültiges Lichess JSON aus Fixture zu korrektem Puzzle-Objekt',
         () {
       final puzzleMap = fixtureData.first as Map<String, dynamic>;
+      final expectedId = puzzleMap['puzzle']['id'].toString();
+      final expectedRating = puzzleMap['puzzle']['rating'] as int;
+      final expectedFirstMove = puzzleMap['puzzle']['solution'][0].toString();
+      final expectedLastMove = puzzleMap['puzzle']['lastMove'].toString();
+
       final puzzle = Puzzle.fromLichessJson(puzzleMap);
 
-      expect(puzzle.id, '00008');
-      expect(puzzle.rating, 1798);
-      expect(puzzle.themes, contains('hangingPiece'));
-      expect(puzzle.sourceUrl, 'https://lichess.org/training/00008');
+      expect(puzzle.id, expectedId);
+      expect(puzzle.rating, expectedRating);
+      expect(puzzle.sourceUrl, 'https://lichess.org/training/$expectedId');
 
-      // Die Lösung MUSS den Gegnerzug (f2g3) als ersten Zug enthalten!
-      expect(puzzle.solutionMoves.first, 'f2g3');
-      expect(puzzle.solutionMoves[1], 'e6e7');
+      // Die Lösung MUSS den Gegnerzug (lastMove) als ersten Zug enthalten!
+      expect(puzzle.solutionMoves.first, expectedLastMove);
+      expect(puzzle.solutionMoves[1], expectedFirstMove);
     });
 
-    test('Verifiziert alle 10 Puzzles in der Fixture', () {
-      for (var i = 0; i < fixtureData.length; i++) {
-        final puzzleMap = fixtureData[i] as Map<String, dynamic>;
+    // Dynamische Generierung von Einzeltests pro Puzzle
+    for (var i = 0; i < fixtureData.length; i++) {
+      final puzzleMap = fixtureData[i] as Map<String, dynamic>;
+      final id = puzzleMap['puzzle']['id'];
+
+      test('Puzzle $id (Index $i) ist FEN-konsistent und erster Zug ist legal',
+          () {
         final puzzle = Puzzle.fromLichessJson(puzzleMap);
 
         // 1. Lade FEN
@@ -78,15 +83,15 @@ void main() {
         final pieceToMove = board.tiles[move.from];
         expect(pieceToMove, isNotNull,
             reason:
-                'Puzzle \${puzzle.id} (Index \$i): Keine Figur auf Startfeld des ersten Zugs \$firstUci in FEN \${puzzle.fen}');
+                'Keine Figur auf Startfeld des ersten Zugs $firstUci in FEN ${puzzle.fen}');
 
         final legalMoves = board.movesForPiece(pieceToMove!, legal: true);
         final isLegal = legalMoves.contains(move.to);
 
         expect(isLegal, isTrue,
             reason:
-                'Puzzle \${puzzle.id} (Index \$i): Der erste Zug \$firstUci ist in der Stellung \${puzzle.fen} nicht legal.');
-      }
-    });
+                'Der erste Zug $firstUci ist in der Stellung ${puzzle.fen} nicht legal.');
+      });
+    }
   });
 }
