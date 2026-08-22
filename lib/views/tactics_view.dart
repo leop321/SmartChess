@@ -11,6 +11,7 @@ import 'components/shared/glass_panel.dart';
 import 'components/tactics_view/puzzle_rush_settings_dialog.dart';
 import 'tactics_puzzle_view.dart';
 import 'tactics_settings_view.dart';
+import 'tactics_view_2.dart';
 
 // ── Shared DotGridPainter ──
 class DotGridPainter extends CustomPainter {
@@ -47,6 +48,8 @@ extension TacticsModeInfo on TacticsMode {
         return 'Anti-Tactics';
       case TacticsMode.antiTacticsV2:
         return 'Anti-Tactics V2';
+      case TacticsMode.tactics2:
+        return 'Taktikaufgaben 2.0';
       case TacticsMode.blindfold:
         return 'Blindfold';
     }
@@ -62,6 +65,8 @@ extension TacticsModeInfo on TacticsMode {
         return 'Finde Fake-Taktiken und spiele auf Sicherheit.';
       case TacticsMode.antiTacticsV2:
         return 'Erkenne Taktik-lose Situationen aus besten Zügen.';
+      case TacticsMode.tactics2:
+        return 'Lichess Daily & Random Puzzles';
       case TacticsMode.blindfold:
         return 'No board shown — pure visualization';
     }
@@ -77,6 +82,8 @@ extension TacticsModeInfo on TacticsMode {
         return Icons.security_rounded;
       case TacticsMode.antiTacticsV2:
         return Icons.shield_moon_rounded;
+      case TacticsMode.tactics2:
+        return Icons.auto_awesome_rounded;
       case TacticsMode.blindfold:
         return Icons.visibility_off_rounded;
     }
@@ -92,6 +99,8 @@ extension TacticsModeInfo on TacticsMode {
         return const Color(0xFFEF7090);
       case TacticsMode.antiTacticsV2:
         return const Color(0xFFEF7090);
+      case TacticsMode.tactics2:
+        return const Color(0xFF66BB6A);
       case TacticsMode.blindfold:
         return const Color(0xFFB39DDB);
     }
@@ -107,6 +116,8 @@ extension TacticsModeInfo on TacticsMode {
         return 'TRICKY';
       case TacticsMode.antiTacticsV2:
         return 'TRICKY V2';
+      case TacticsMode.tactics2:
+        return 'NEW';
       case TacticsMode.blindfold:
         return 'HARD';
     }
@@ -862,6 +873,12 @@ class _StartButton extends StatelessWidget {
             Navigator.of(context).push(
               CupertinoPageRoute(
                 builder: (context) => TacticsPuzzleView(mode: mode),
+              ),
+            );
+          } else if (mode == TacticsMode.tactics2) {
+            Navigator.of(context).push(
+              CupertinoPageRoute(
+                builder: (context) => const TacticsView2(),
               ),
             );
           } else {

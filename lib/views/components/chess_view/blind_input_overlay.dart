@@ -278,19 +278,6 @@ class _BlindInputOverlayState extends ConsumerState<BlindInputOverlay>
                       widget.controller.peekBoard();
                     },
                   ),
-                  const SizedBox(width: 8),
-
-                  // Update Board (Snapshot only)
-                  if (mode == ChessMode.snapshot)
-                    _ActionButton(
-                      icon: Icons.sync_rounded,
-                      label: 'Update',
-                      theme: theme,
-                      onTap: () {
-                        appModel.haptic.light();
-                        widget.controller.updateBoard();
-                      },
-                    ),
                 ],
               ),
               const SizedBox(height: 6),

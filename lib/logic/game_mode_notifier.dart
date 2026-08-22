@@ -4,6 +4,7 @@ enum ChessMode {
   normal,
   blind,
   snapshot,
+  tactics2,
 }
 
 class GameModeNotifier extends Notifier<ChessMode> {

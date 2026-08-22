@@ -514,11 +514,8 @@ class _SnapshotChessScreenState extends State<SnapshotChessScreen>
                             aspectRatio: 1.0,
                             child: IgnorePointer(
                               ignoring: true,
-                              child: RotatedBox(
-                                quarterTurns: appModel.isBoardInverted ? 2 : 0,
-                                child: GameWidget(
-                                  game: widget.chessGame,
-                                ),
+                              child: GameWidget(
+                                game: widget.chessGame,
                               ),
                             ),
                           ),

@@ -1,4 +1,11 @@
-enum TacticsMode { classic, antiTactics, antiTacticsV2, blindfold, puzzleRush }
+enum TacticsMode {
+  classic,
+  antiTactics,
+  antiTacticsV2,
+  blindfold,
+  puzzleRush,
+  tactics2
+}
 
 enum AntiTacticsType { winningTacticExists, noWinningTactic }
 

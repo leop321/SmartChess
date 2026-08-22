@@ -179,6 +179,8 @@ void main() {
       final prefs = UserPreferences();
       await prefs.load();
       final appModel = AppModel(prefs: prefs);
+      appModel.audio.enabled = false;
+      appModel.haptic.enabled = false;
 
       final noWinningTask = const TacticsTask(
         id: 'mock',

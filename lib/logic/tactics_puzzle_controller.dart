@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import '../model/anti_tactics_storage.dart';
 import '../model/app_model.dart';
 import '../model/lichess_puzzle.dart'; // Keep for PuzzleRecord
+import '../model/player.dart';
 import '../model/tactics_task.dart';
 import 'chess_piece.dart';
 import 'game_controller.dart';
@@ -255,6 +256,10 @@ class TacticsPuzzleController extends ChangeNotifier
     _fenHistory.add(_board!.fen); // snapshot[0] = initial position
 
     if (gameController != null) {
+      gameController!.appModel.playerSide =
+          _initialPlayerColor == ch.Color.WHITE
+              ? Player.player1
+              : Player.player2;
       gameController!.loadFEN(task.fen);
     }
 
