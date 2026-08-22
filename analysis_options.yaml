@@ -2,6 +2,7 @@ analyzer:
   exclude:
     - _MoveChessApp/**
     - screenshots_editor/**
+    - clean_chess_ref/**
 
 linter:
   rules:

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -126,9 +125,11 @@ class TacticsView extends StatelessWidget {
                                   height: 72,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: theme.lightTile.withValues(alpha: 0.12),
+                                    color:
+                                        theme.lightTile.withValues(alpha: 0.12),
                                     border: Border.all(
-                                      color: theme.lightTile.withValues(alpha: 0.25),
+                                      color: theme.lightTile
+                                          .withValues(alpha: 0.25),
                                       width: 1.5,
                                     ),
                                   ),
@@ -149,10 +150,12 @@ class TacticsView extends StatelessWidget {
                                     vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: theme.moveHint.withValues(alpha: 0.15),
+                                    color:
+                                        theme.moveHint.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
-                                      color: theme.moveHint.withValues(alpha: 0.35),
+                                      color: theme.moveHint
+                                          .withValues(alpha: 0.35),
                                       width: 1,
                                     ),
                                   ),
@@ -187,7 +190,8 @@ class TacticsView extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     height: 1.4,
-                                    color: const Color(0xFFE5E2E1).withValues(alpha: 0.65),
+                                    color: const Color(0xFFE5E2E1)
+                                        .withValues(alpha: 0.65),
                                   ),
                                 ),
                               ],
