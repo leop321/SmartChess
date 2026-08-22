@@ -195,11 +195,8 @@ class ChessGame extends FlameGame with TapCallbacks {
       _updatePaints();
     }
 
-    // In tactics mode the board flip is handled externally by a RotatedBox
-    // in TacticsPuzzleView, so we keep internal rotation at 0 to avoid
-    // double-rotating the canvas.
     double newTargetRotation = 0;
-    if (appModel.isBoardInverted && !appModel.isTacticsMode) {
+    if (appModel.isBoardInverted) {
       newTargetRotation = math.pi;
     } else {
       newTargetRotation = 0;
@@ -309,9 +306,7 @@ class ChessGame extends FlameGame with TapCallbacks {
   }
 
   double _getPieceRotation() {
-    if (appModel.isAnalysisMode ||
-        appModel.isTacticsMode ||
-        appModel.historyViewIndex != null) {
+    if (appModel.isAnalysisMode || appModel.historyViewIndex != null) {
       return appModel.isBoardInverted ? math.pi : 0;
     }
 

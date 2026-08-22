@@ -23,7 +23,6 @@ import 'app_themes.dart';
 import 'completed_game.dart';
 import 'game_state.dart';
 import 'player.dart';
-import 'puzzle_model.dart';
 import 'user_preferences.dart';
 
 class AppModel extends ChangeNotifier {
@@ -34,25 +33,8 @@ class AppModel extends ChangeNotifier {
   Player playerSide = Player.player1;
   ChessMode gameMode = ChessMode.normal;
   bool isAnalysisMode = false;
-  bool isTacticsMode = false;
-  bool get isTactics2Mode => gameMode == ChessMode.tactics2;
   bool _hasSavedGame = false;
   bool get hasSavedGame => _hasSavedGame;
-
-  // ── Tactics 2.0 State ──
-  List<PuzzleStreakData> puzzleStreak = [];
-  int puzzleRetries = 0;
-  int puzzleHints = 0;
-
-  void recordPuzzleResult(double elo, bool win) {
-    puzzleStreak.add(PuzzleStreakData(elo, win));
-    notifyListeners();
-  }
-
-  void resetPuzzleStreak() {
-    puzzleStreak.clear();
-    notifyListeners();
-  }
 
   Future<void> checkSavedGame() async {
     _hasSavedGame = await GameStateStorage.hasSavedGame();
@@ -362,9 +344,6 @@ class AppModel extends ChangeNotifier {
   bool? _gameOverInvertedState;
 
   bool get isBoardInverted {
-    if (isTacticsMode) {
-      return playerSide == Player.player2;
-    }
     if (historyViewIndex != null || isAnalysisMode) {
       return playerSide == Player.player2;
     }
