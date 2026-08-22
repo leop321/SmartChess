@@ -357,7 +357,7 @@ class AppModel extends ChangeNotifier {
     }
   }
 
-  AppModel({UserPreferences? prefs}) : prefs = prefs ?? UserPreferences() {
+  AppModel({UserPreferences? prefs, bool skipServerWarmup = false}) : prefs = prefs ?? UserPreferences() {
     // Wire up service callbacks
     this.prefs.onChanged = () {
       audio.enabled = this.prefs.soundEnabled;
@@ -375,7 +375,9 @@ class AppModel extends ChangeNotifier {
     }
 
     // Start warming up the Render cloud server in the background
-    startServerWarmup();
+    if (!skipServerWarmup) {
+      startServerWarmup();
+    }
     checkSavedGame();
   }
 
